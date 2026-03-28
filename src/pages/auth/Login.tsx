@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { IoLogoGoogle, IoMail, IoLockClosed } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
+import { assertPortalRole } from '../../lib/authRole'
 import { validateEmail } from '../../lib/validation'
 import toast from 'react-hot-toast'
 
@@ -21,8 +22,14 @@ export default function Login() {
     if (emailErr) return toast.error(emailErr)
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      setLoading(false)
+      return toast.error(error.message)
+    }
+
+    const roleCheck = await assertPortalRole('customer')
     setLoading(false)
-    if (error) return toast.error(error.message)
+    if (!roleCheck.ok) return toast.error(roleCheck.message)
   }
 
   const handleGoogle = async () => {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { IoLogoGoogle, IoMail, IoLockClosed, IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
+import { assertPortalRole } from '../../lib/authRole'
 import { validateEmail } from '../../lib/validation'
 import toast from 'react-hot-toast'
 
@@ -25,8 +26,8 @@ export default function WorkerLogin() {
     setLoading(true)
     setShowResend(false)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
     if (error) {
+      setLoading(false)
       const msg = error.message?.toLowerCase() || ''
       if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('not found')) {
         setShowResend(true)
@@ -37,7 +38,12 @@ export default function WorkerLogin() {
       } else {
         toast.error(error.message)
       }
+      return
     }
+
+    const roleCheck = await assertPortalRole('worker')
+    setLoading(false)
+    if (!roleCheck.ok) return toast.error(roleCheck.message)
   }
 
   const handleResend = async () => {
