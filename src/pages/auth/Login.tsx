@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { IoLogoGoogle, IoMail, IoLockClosed } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
-import { assertPortalRole } from '../../lib/authRole'
+import { assertEmailConfirmed, assertPortalRole } from '../../lib/authRole'
 import { validateEmail } from '../../lib/validation'
 import toast from 'react-hot-toast'
 
@@ -15,16 +15,47 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [showResend, setShowResend] = useState(false)
+
+  const handleResend = async () => {
+    const emailErr = validateEmail(email)
+    if (emailErr) return toast.error(emailErr)
+    setResendLoading(true)
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: emailRedirect('/customer/home') },
+    })
+    setResendLoading(false)
+    if (error) toast.error(error.message)
+    else toast.success('Confirmation email sent. Check your inbox.')
+  }
 
   const handleEmailLogin = async () => {
     if (!password) return toast.error('Please enter your password')
     const emailErr = validateEmail(email)
     if (emailErr) return toast.error(emailErr)
     setLoading(true)
+    setShowResend(false)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setLoading(false)
-      return toast.error(error.message)
+      const msg = error.message?.toLowerCase() || ''
+      if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+        setShowResend(true)
+        toast.error('Please verify your email before signing in.')
+      } else {
+        toast.error(error.message)
+      }
+      return
+    }
+
+    const emailCheck = await assertEmailConfirmed()
+    if (!emailCheck.ok) {
+      setLoading(false)
+      setShowResend(true)
+      return toast.error(emailCheck.message)
     }
 
     const roleCheck = await assertPortalRole('customer')
@@ -110,6 +141,23 @@ export default function Login() {
             <button onClick={handleEmailLogin} disabled={loading} className="btn-primary">
               {loading ? 'Logging in...' : 'Login'}
             </button>
+
+            {showResend && (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 animate-fade-in">
+                <p className="text-sm text-amber-800 font-medium mb-1">Email not verified?</p>
+                <p className="text-xs text-amber-700 mb-3">
+                  Open the link we sent you, or request a new confirmation email.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resendLoading}
+                  className="text-sm font-semibold text-amber-800 underline disabled:opacity-50"
+                >
+                  {resendLoading ? 'Sending...' : 'Resend confirmation email'}
+                </button>
+              </div>
+            )}
 
             <div className="flex items-center gap-3 my-2">
               <div className="flex-1 h-px bg-border" />

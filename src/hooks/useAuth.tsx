@@ -1,4 +1,5 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react'
+import { signOutIfEmailPasswordUnconfirmed } from '../lib/authRole'
 import { supabase } from '../lib/supabase'
 import type { User as AppUser, UserRole } from '../types'
 import type { User as SupaUser, Session } from '@supabase/supabase-js'
@@ -21,6 +22,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (supaUser: SupaUser) => {
     try {
+      const kicked = await signOutIfEmailPasswordUnconfirmed(supaUser)
+      if (kicked) {
+        setSession(null)
+        setUser(null)
+        return
+      }
+
       const emailConfirmed = !!supaUser.email_confirmed_at
       const isGoogleUser =
         supaUser.app_metadata?.provider === 'google' ||

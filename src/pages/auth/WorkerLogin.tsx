@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { IoLogoGoogle, IoMail, IoLockClosed, IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
-import { assertPortalRole } from '../../lib/authRole'
+import { assertEmailConfirmed, assertPortalRole } from '../../lib/authRole'
 import { validateEmail } from '../../lib/validation'
 import toast from 'react-hot-toast'
 
@@ -41,6 +41,13 @@ export default function WorkerLogin() {
       return
     }
 
+    const emailCheck = await assertEmailConfirmed()
+    if (!emailCheck.ok) {
+      setLoading(false)
+      setShowResend(true)
+      return toast.error(emailCheck.message)
+    }
+
     const roleCheck = await assertPortalRole('worker')
     setLoading(false)
     if (!roleCheck.ok) return toast.error(roleCheck.message)
@@ -50,7 +57,11 @@ export default function WorkerLogin() {
     const emailErr = validateEmail(email)
     if (emailErr) return toast.error(emailErr)
     setResendLoading(true)
-    const { error } = await supabase.auth.resend({ type: 'signup', email })
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: emailRedirect('/worker/dashboard') },
+    })
     setResendLoading(false)
     if (error) toast.error(error.message)
     else toast.success('Confirmation email resent!')
