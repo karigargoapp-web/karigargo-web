@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoArrowBack, IoCamera, IoLogoGoogle, IoCheckmarkCircle, IoCloudUpload } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
+import { emailRedirect } from '../../lib/authRedirect'
 import { PAKISTAN_CITIES } from '../../types'
 import toast from 'react-hot-toast'
 
@@ -31,7 +32,7 @@ export default function CustomerSignup() {
   const handleGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/customer/home' },
+      options: { redirectTo: emailRedirect('/customer/home') },
     })
     if (error) toast.error(error.message)
   }
@@ -51,7 +52,11 @@ export default function CustomerSignup() {
     setLoading(true)
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({ email, password })
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: emailRedirect('/customer/home') },
+      })
       if (authError) {
         const msg = authError.message?.toLowerCase() || ''
         if (msg.includes('rate') || msg.includes('too many')) {

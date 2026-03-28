@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoLogoGoogle, IoMail, IoLockClosed, IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
+import { emailRedirect } from '../../lib/authRedirect'
 import toast from 'react-hot-toast'
 
 type AuthTab = 'login' | 'signup'
@@ -48,7 +49,7 @@ export default function WorkerLogin() {
   const handleGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/worker/dashboard' },
+      options: { redirectTo: emailRedirect('/worker/dashboard') },
     })
     if (error) toast.error(error.message)
   }

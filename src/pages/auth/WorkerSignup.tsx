@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoArrowBack, IoCamera, IoCheckmarkCircle, IoCloudUpload, IoLogoGoogle } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
+import { emailRedirect } from '../../lib/authRedirect'
 import { SERVICE_CATEGORIES, PAKISTAN_CITIES } from '../../types'
 import toast from 'react-hot-toast'
 
@@ -63,7 +64,11 @@ export default function WorkerSignup() {
     submitLockRef.current = true
     setLoading(true)
     try {
-      const { data: authData, error } = await supabase.auth.signUp({ email, password })
+      const { data: authData, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: emailRedirect('/worker/dashboard') },
+      })
       if (error) {
         const msg = error.message?.toLowerCase() || ''
         if (msg.includes('rate') || msg.includes('too many')) {
