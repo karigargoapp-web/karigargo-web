@@ -91,7 +91,7 @@ export default function CustomerSignup() {
       })
       if (insertErr) throw insertErr
 
-      await supabase
+      const { error: cnicUpdateErr } = await supabase
         .from('users')
         .update({
           cnic: cnic,
@@ -99,8 +99,9 @@ export default function CustomerSignup() {
           cnic_back_url: cnicBackUrl,
         })
         .eq('id', userId)
-        .then(() => {})
-        .catch(() => {})
+      if (cnicUpdateErr) {
+        console.warn('CNIC fields update:', cnicUpdateErr.message)
+      }
 
       setIsSubmitted(true)
     } catch (err: unknown) {
