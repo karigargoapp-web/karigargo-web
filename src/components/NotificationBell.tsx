@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { IoNotifications } from 'react-icons/io5'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { getBrowserNotificationPermission, showBrowserNotification } from '../lib/browserNotifications'
 import type { Notification } from '../types'
 
 export default function NotificationBell() {
@@ -26,7 +27,16 @@ export default function NotificationBell() {
     const channel = supabase
       .channel(`notif-${user.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        (payload) => { setNotifications(prev => [payload.new as Notification, ...prev].slice(0, 10)) }
+        (payload) => {
+          const row = payload.new as Notification
+          setNotifications(prev => [row, ...prev].slice(0, 10))
+          if (
+            document.visibilityState === 'hidden' &&
+            getBrowserNotificationPermission() === 'granted'
+          ) {
+            showBrowserNotification(row.title, { body: row.body, tag: row.id })
+          }
+        }
       )
       .subscribe()
 

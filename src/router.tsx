@@ -40,6 +40,7 @@ import AdminUsers from './pages/admin/Users'
 import AdminJobs from './pages/admin/Jobs'
 import AdminRevenue from './pages/admin/Revenue'
 import AdminReports from './pages/admin/Reports'
+import BrowserNotificationPrompt from './components/BrowserNotificationPrompt'
 
 function ProtectedRoute({ allowedRoles }: { allowedRoles?: string[] }) {
   const { user, loading } = useAuth()
@@ -69,6 +70,7 @@ function AuthRoute() {
 export function AppRouter() {
   return (
     <AuthProvider>
+      <BrowserNotificationPrompt />
       <Routes>
         {/* Public / Auth routes */}
         <Route element={<AuthRoute />}>

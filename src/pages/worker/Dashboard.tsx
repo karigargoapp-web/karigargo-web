@@ -57,17 +57,20 @@ export default function WorkerDashboard() {
               <p className="text-white/50 text-xs mt-0.5">Skills: {profile.skills.join(', ')}</p>
             )}
           </div>
-          <button onClick={() => nav('/worker/profile')}>
-            <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-white/20 flex items-center justify-center">
-              {user?.profile_photo_url ? (
-                <img src={user.profile_photo_url} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-white font-bold text-lg">
-                  {(user?.name || 'W').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                </span>
-              )}
-            </div>
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <button onClick={() => nav('/worker/profile')}>
+              <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-white/20 flex items-center justify-center">
+                {user?.profile_photo_url ? (
+                  <img src={user.profile_photo_url} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white font-bold text-lg">
+                    {(user?.name || 'W').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                  </span>
+                )}
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Stats row */}
