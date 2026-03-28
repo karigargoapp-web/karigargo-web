@@ -11,3 +11,4 @@ build/
 .env
 .env.local
 .env.*.local
+supabase/schema.sql

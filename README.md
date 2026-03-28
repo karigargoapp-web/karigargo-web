@@ -1,13 +1,22 @@
-# KarigarGo
+# KarigarGo (web)
 
-**This repository contains only the web app** in [`karigargoapp/`](karigargoapp/README.md) (Vite, React, Supabase).
+Vite + React + TypeScript + Tailwind + Supabase.
 
-A legacy Expo reference UI may exist locally as `karigargoapp-old-ui/` — it is **gitignored** and is not uploaded to GitHub.
-
-Copy [`karigargoapp/.env.example`](karigargoapp/.env.example) to `.env.local` and add your Supabase keys before running.
+## Setup
 
 ```bash
-cd karigargoapp
 npm install
-npm run dev
+cp .env.example .env.local
 ```
+
+Add your Supabase URL and anon key from the [Supabase dashboard](https://supabase.com/dashboard). Do not commit `.env.local`.
+
+## Scripts
+
+```bash
+npm run dev    # development
+npm run build  # production build
+npm run preview
+```
+
+A legacy Expo UI may exist locally as `karigargoapp-old-ui/` — it is gitignored.
