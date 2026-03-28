@@ -63,7 +63,7 @@ export default function WorkerSignup() {
         validatePersonName(name) ||
         validateEmail(email) ||
         validatePassword(password) ||
-        validatePakistanPhone(phone, { optional: true })
+        validatePakistanPhone(phone, { optional: false })
       if (err) return toast.error(err)
       if (photo) {
         const pe = validateImageFile(photo, { required: false })
@@ -97,7 +97,7 @@ export default function WorkerSignup() {
       validatePersonName(name) ||
       validateEmail(email) ||
       validatePassword(password) ||
-      validatePakistanPhone(phone, { optional: true }) ||
+      validatePakistanPhone(phone, { optional: false }) ||
       validateCNIC(cnic) ||
       validateWorkerBio(bio) ||
       validateImageFile(cnicFront, { required: true }) ||
@@ -140,10 +140,7 @@ export default function WorkerSignup() {
       if (photo) photoUrl = await uploadFile(photo, 'avatars')
 
       const rawPhone = phone.trim()
-      let phoneForDb: string | null = null
-      if (rawPhone) {
-        phoneForDb = rawPhone.startsWith('0') ? '+92' + rawPhone.slice(1) : rawPhone
-      }
+      const phoneForDb = rawPhone.startsWith('0') ? '+92' + rawPhone.slice(1) : rawPhone
 
       const cnicFormatted = formatCNICDisplay(cnic)
 
@@ -256,7 +253,7 @@ export default function WorkerSignup() {
               />
             </div>
             <div>
-              <label className="text-sm text-text-secondary mb-1.5 block">Phone Number <span className="text-text-muted">(optional)</span></label>
+              <label className="text-sm text-text-secondary mb-1.5 block">Phone Number *</label>
               <input type="tel" placeholder="03001234567" value={phone} onChange={e => setPhone(e.target.value)} />
             </div>
             <div>

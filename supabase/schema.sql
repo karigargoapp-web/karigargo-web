@@ -774,16 +774,21 @@ alter table users add column if not exists cnic_back_url text;
 
 alter table users add column if not exists profile_complete boolean not null default false;
 
--- Backfill existing users who already have their CNIC filled in (customer)
-update public.users set profile_complete = true where cnic is not null and cnic != '';
+-- Backfill customers: must have cnic + city (all required fields filled)
+update public.users set profile_complete = true
+where role = 'customer'
+  and cnic      is not null and cnic      != ''
+  and city      is not null and city      != '';
 
--- Backfill workers whose worker_profiles have a CNIC (covers worker accounts)
+-- Backfill workers: must have city + phone in users AND cnic in worker_profiles
 update public.users u
 set profile_complete = true
 from public.worker_profiles wp
 where wp.user_id = u.id
-  and wp.cnic is not null
-  and wp.cnic != '';
+  and u.role    = 'worker'
+  and u.city    is not null and u.city  != ''
+  and u.phone   is not null and u.phone != ''
+  and wp.cnic   is not null and wp.cnic != '';
 
 
 -- ========================

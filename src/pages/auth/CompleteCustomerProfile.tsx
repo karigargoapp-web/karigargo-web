@@ -31,6 +31,7 @@ export default function CompleteCustomerProfile() {
 
   const handleSubmit = async () => {
     const err =
+      (!city ? 'Please select your city' : null) ||
       validateCNIC(cnic) ||
       validateImageFile(cnicFront, { required: true }) ||
       validateImageFile(cnicBack, { required: true })
@@ -101,7 +102,7 @@ export default function CompleteCustomerProfile() {
 
         {/* City */}
         <div>
-          <label className="text-sm font-medium text-text-primary mb-1.5 block">City <span className="text-text-muted font-normal">(optional)</span></label>
+          <label className="text-sm font-medium text-text-primary mb-1.5 block">City *</label>
           <select
             value={city}
             onChange={e => setCity(e.target.value)}

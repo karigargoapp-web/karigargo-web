@@ -51,7 +51,7 @@ export default function CompleteWorkerProfile() {
   const nextStep = () => {
     if (step === 0) {
       if (skills.length === 0 || !city) return toast.error('Select at least one skill and a city')
-      const phoneErr = validatePakistanPhone(phone, { optional: true })
+      const phoneErr = validatePakistanPhone(phone, { optional: false })
       if (phoneErr) return toast.error(phoneErr)
     }
     if (step === 1) {
@@ -86,9 +86,7 @@ export default function CompleteWorkerProfile() {
       for (const cert of certificates) certUrls.push(await uploadFile(cert, 'certificates'))
 
       const rawPhone = phone.trim()
-      const phoneForDb = rawPhone
-        ? rawPhone.startsWith('0') ? '+92' + rawPhone.slice(1) : rawPhone
-        : null
+      const phoneForDb = rawPhone.startsWith('0') ? '+92' + rawPhone.slice(1) : rawPhone
 
       const { error: usersErr } = await supabase
         .from('users')
@@ -184,9 +182,7 @@ export default function CompleteWorkerProfile() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-text-primary mb-1.5 block">
-                Phone <span className="text-text-muted font-normal">(optional)</span>
-              </label>
+              <label className="text-sm font-medium text-text-primary mb-1.5 block">Phone Number *</label>
               <input
                 type="tel"
                 placeholder="03001234567"

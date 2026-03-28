@@ -58,6 +58,7 @@ export default function CustomerSignup() {
       validatePersonName(name) ||
       validateEmail(email) ||
       validatePassword(password) ||
+      (!city ? 'Please select your city' : null) ||
       validateCNIC(cnic) ||
       validateImageFile(cnicFront, { required: true }) ||
       validateImageFile(cnicBack, { required: true })
@@ -238,7 +239,7 @@ export default function CustomerSignup() {
           <p className="text-[11px] text-text-muted mt-1 leading-snug">{PASSWORD_HINT}</p>
         </div>
         <div>
-          <label className="text-sm text-text-secondary mb-1.5 block">City</label>
+          <label className="text-sm text-text-secondary mb-1.5 block">City *</label>
           <select
             value={city}
             onChange={e => setCity(e.target.value)}
