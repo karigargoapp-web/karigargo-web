@@ -763,6 +763,34 @@ alter table users add column if not exists cnic_back_url text;
 
 
 -- ========================
+-- 12d. TRIGGER: Sync email verification → users.verified
+-- ========================
+-- When Supabase Auth confirms an email (user clicks the link, or signs
+-- in via Google OAuth), auth.users.email_confirmed_at becomes non-null.
+-- This trigger copies that fact into public.users.verified = true so the
+-- app's "verified" badge works automatically without admin intervention.
+
+create or replace function public.sync_email_verified()
+returns trigger as $$
+begin
+  if new.email_confirmed_at is not null
+     and (old.email_confirmed_at is null or old.email_confirmed_at is distinct from new.email_confirmed_at)
+  then
+    update public.users set verified = true where id = new.id;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+do $$ begin
+  create trigger trg_sync_email_verified
+    after update on auth.users
+    for each row execute function public.sync_email_verified();
+exception when duplicate_object then null;
+end $$;
+
+
+-- ========================
 -- 13. TRIGGER: Update worker stats on job completion
 -- ========================
 -- Fires whenever a job's status changes to 'completed'.

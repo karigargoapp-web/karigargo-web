@@ -21,6 +21,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (supaUser: SupaUser) => {
     try {
+      const emailConfirmed = !!supaUser.email_confirmed_at
+      const isGoogleUser =
+        supaUser.app_metadata?.provider === 'google' ||
+        supaUser.identities?.some(i => i.provider === 'google')
+
       const { data } = await supabase
         .from('users')
         .select('*')
@@ -28,14 +33,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single()
 
       if (data) {
+        if (!data.verified && (emailConfirmed || isGoogleUser)) {
+          await supabase.from('users').update({ verified: true }).eq('id', supaUser.id)
+          data.verified = true
+        }
         setUser(data as AppUser)
         return
       }
 
-      const isOAuth =
-        supaUser.app_metadata?.provider === 'google' ||
-        supaUser.identities?.some(i => i.provider === 'google')
-      if (!isOAuth) return
+      if (!isGoogleUser) return
 
       const name =
         supaUser.user_metadata?.full_name ||
@@ -57,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         p_role: role,
         p_city: null,
         p_profile_photo_url: photo,
-        p_verified: false,
+        p_verified: true,
       })
 
       if (!rpcErr && role === 'worker') {
