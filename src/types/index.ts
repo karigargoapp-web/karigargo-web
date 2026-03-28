@@ -11,6 +11,7 @@ export interface User {
   profile_photo_url?: string
   city?: string
   verified: boolean
+  profile_complete: boolean
   avg_rating: number
   total_reviews: number
   created_at: string

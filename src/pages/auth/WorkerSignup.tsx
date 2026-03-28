@@ -177,6 +177,8 @@ export default function WorkerSignup() {
       })
       if (profileErr) throw profileErr
 
+      await supabase.from('users').update({ profile_complete: true }).eq('id', userId)
+
       setIsSubmitted(true)
     } catch (err: any) {
       toast.error(err.message || 'Signup failed')

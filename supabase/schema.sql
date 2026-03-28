@@ -80,6 +80,7 @@ create table if not exists users (
 );
 -- Client app enforces: email format; password strength (8+ chars, upper, lower, digit, special);
 -- Pakistan CNIC 13 digits; mobile 03XXXXXXXXX; name letters/spaces (see src/lib/validation.ts).
+-- profile_complete: false for Google OAuth new users until they fill CNIC/city on the completion page.
 
 -- ─────────── WORKER PROFILES ───────────
 -- Extra info for workers only (skills, CNIC docs, stats).
@@ -765,7 +766,28 @@ alter table users add column if not exists cnic_back_url text;
 
 
 -- ========================
--- 12d. TRIGGER: Sync email verification → users.verified
+-- 12d2. PROFILE COMPLETION FLAG
+-- ========================
+-- false = Google OAuth user who hasn't filled CNIC/city yet.
+-- true  = email/password user (filled at signup) or Google user who completed the extra step.
+-- ProtectedRoute in the app redirects to /complete-profile/* when this is false.
+
+alter table users add column if not exists profile_complete boolean not null default false;
+
+-- Backfill existing users who already have their CNIC filled in (customer)
+update public.users set profile_complete = true where cnic is not null and cnic != '';
+
+-- Backfill workers whose worker_profiles have a CNIC (covers worker accounts)
+update public.users u
+set profile_complete = true
+from public.worker_profiles wp
+where wp.user_id = u.id
+  and wp.cnic is not null
+  and wp.cnic != '';
+
+
+-- ========================
+-- 12e. TRIGGER: Sync email verification → users.verified
 -- ========================
 -- When Supabase Auth confirms an email (user clicks the link, or signs
 -- in via Google OAuth), auth.users.email_confirmed_at becomes non-null.

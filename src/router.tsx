@@ -41,17 +41,34 @@ import AdminJobs from './pages/admin/Jobs'
 import AdminRevenue from './pages/admin/Revenue'
 import AdminReports from './pages/admin/Reports'
 import BrowserNotificationPrompt from './components/BrowserNotificationPrompt'
+import CompleteCustomerProfile from './pages/auth/CompleteCustomerProfile'
+import CompleteWorkerProfile from './pages/auth/CompleteWorkerProfile'
+
+function roleHome(role: string) {
+  if (role === 'customer') return '/customer/home'
+  if (role === 'worker') return '/worker/dashboard'
+  if (role === 'admin') return '/admin'
+  return '/login'
+}
+
+function completionRoute(role: string) {
+  if (role === 'customer') return '/complete-profile/customer'
+  if (role === 'worker') return '/complete-profile/worker'
+  return '/login'
+}
 
 function ProtectedRoute({ allowedRoles }: { allowedRoles?: string[] }) {
   const { user, loading } = useAuth()
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-surface">Loading...</div>
   if (!user) return <Navigate to="/login" replace />
+
+  // Google OAuth users who haven't filled CNIC yet
+  if (!user.profile_complete) {
+    return <Navigate to={completionRoute(user.role)} replace />
+  }
+
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If logged in but wrong role, send them to their actual home
-    if (user.role === 'customer') return <Navigate to="/customer/home" replace />
-    if (user.role === 'worker') return <Navigate to="/worker/dashboard" replace />
-    if (user.role === 'admin') return <Navigate to="/admin" replace />
-    return <Navigate to="/login" replace />
+    return <Navigate to={roleHome(user.role)} replace />
   }
   return <Outlet />
 }
@@ -60,10 +77,19 @@ function AuthRoute() {
   const { user, loading } = useAuth()
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-surface">Loading...</div>
   if (user) {
-    if (user.role === 'customer') return <Navigate to="/customer/home" replace />
-    if (user.role === 'worker') return <Navigate to="/worker/dashboard" replace />
-    if (user.role === 'admin') return <Navigate to="/admin" replace />
+    if (!user.profile_complete) return <Navigate to={completionRoute(user.role)} replace />
+    return <Navigate to={roleHome(user.role)} replace />
   }
+  return <Outlet />
+}
+
+/** Requires login but does NOT enforce profile_complete (used for completion pages themselves). */
+function ProfileCompletionRoute() {
+  const { user, loading } = useAuth()
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-surface">Loading...</div>
+  if (!user) return <Navigate to="/login" replace />
+  // Already complete → send them home
+  if (user.profile_complete) return <Navigate to={roleHome(user.role)} replace />
   return <Outlet />
 }
 
@@ -78,6 +104,12 @@ export function AppRouter() {
           <Route path="/login/worker" element={<WorkerLogin />} />
           <Route path="/signup/customer" element={<CustomerSignup />} />
           <Route path="/signup/worker" element={<WorkerSignup />} />
+        </Route>
+
+        {/* Profile completion (logged in but profile_complete = false) */}
+        <Route element={<ProfileCompletionRoute />}>
+          <Route path="/complete-profile/customer" element={<CompleteCustomerProfile />} />
+          <Route path="/complete-profile/worker" element={<CompleteWorkerProfile />} />
         </Route>
 
         {/* Customer routes */}

@@ -123,6 +123,7 @@ export default function CustomerSignup() {
           cnic: cnicFormatted,
           cnic_front_url: cnicFrontUrl,
           cnic_back_url: cnicBackUrl,
+          profile_complete: true,
         })
         .eq('id', userId)
       if (cnicUpdateErr) {
