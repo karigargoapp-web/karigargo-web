@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoArrowBack, IoCamera, IoLogoGoogle } from 'react-icons/io5'
+import { IoArrowBack, IoCamera, IoLogoGoogle, IoCheckmarkCircle, IoCloudUpload } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { PAKISTAN_CITIES } from '../../types'
 import toast from 'react-hot-toast'
@@ -13,6 +13,9 @@ export default function CustomerSignup() {
   const [city, setCity] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState('')
+  const [cnic, setCnic] = useState('')
+  const [cnicFront, setCnicFront] = useState<File | null>(null)
+  const [cnicBack, setCnicBack] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const submitLockRef = useRef(false)
@@ -33,8 +36,16 @@ export default function CustomerSignup() {
     if (error) toast.error(error.message)
   }
 
+  const uploadFile = async (file: File, folder: string) => {
+    const path = `${folder}/${Date.now()}_${file.name}`
+    await supabase.storage.from('signup-docs').upload(path, file)
+    const { data } = supabase.storage.from('signup-docs').getPublicUrl(path)
+    return data.publicUrl
+  }
+
   const handleSubmit = async () => {
     if (!name || !email || !password) return toast.error('Name, email and password are required')
+    if (!cnic || !cnicFront || !cnicBack) return toast.error('CNIC number and both sides are required')
     if (submitLockRef.current) return
     submitLockRef.current = true
     setLoading(true)
@@ -65,6 +76,9 @@ export default function CustomerSignup() {
         photoUrl = data.publicUrl
       }
 
+      const cnicFrontUrl = await uploadFile(cnicFront!, 'cnic')
+      const cnicBackUrl = await uploadFile(cnicBack!, 'cnic')
+
       const { error: insertErr } = await supabase.rpc('handle_signup_user', {
         p_id: userId,
         p_name: name,
@@ -76,6 +90,17 @@ export default function CustomerSignup() {
         p_verified: false,
       })
       if (insertErr) throw insertErr
+
+      await supabase
+        .from('users')
+        .update({
+          cnic: cnic,
+          cnic_front_url: cnicFrontUrl,
+          cnic_back_url: cnicBackUrl,
+        })
+        .eq('id', userId)
+        .then(() => {})
+        .catch(() => {})
 
       setIsSubmitted(true)
     } catch (err: unknown) {
@@ -125,7 +150,7 @@ export default function CustomerSignup() {
         <h1 className="text-lg font-semibold text-white">Create Customer Account</h1>
       </div>
 
-      <div className="flex-1 px-6 py-6 space-y-5">
+      <div className="flex-1 px-6 py-6 space-y-5 overflow-y-auto pb-10">
         <button
           onClick={handleGoogle}
           className="btn-ghost flex items-center justify-center gap-3 w-full"
@@ -139,6 +164,7 @@ export default function CustomerSignup() {
           <div className="flex-1 h-px bg-border" />
         </div>
 
+        {/* Profile Photo */}
         <div className="flex justify-center">
           <label className="cursor-pointer">
             <div className="w-24 h-24 rounded-full bg-surface border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
@@ -193,6 +219,65 @@ export default function CustomerSignup() {
               </option>
             ))}
           </select>
+        </div>
+
+        {/* CNIC Section */}
+        <div className="bg-surface rounded-2xl p-4 space-y-4">
+          <p className="text-sm font-semibold text-text-primary">CNIC Verification *</p>
+          <div>
+            <label className="text-sm text-text-secondary mb-1.5 block">CNIC Number *</label>
+            <input
+              placeholder="12345-1234567-1"
+              value={cnic}
+              onChange={e => setCnic(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="cursor-pointer">
+              <div
+                className={`h-28 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition ${
+                  cnicFront ? 'border-primary bg-primary/5' : 'border-border'
+                }`}
+              >
+                {cnicFront ? (
+                  <IoCheckmarkCircle size={28} className="text-primary" />
+                ) : (
+                  <IoCloudUpload size={28} className="text-text-muted" />
+                )}
+                <span className="text-xs text-text-secondary">
+                  {cnicFront ? 'Front ✓' : 'CNIC Front *'}
+                </span>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => setCnicFront(e.target.files?.[0] || null)}
+              />
+            </label>
+            <label className="cursor-pointer">
+              <div
+                className={`h-28 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition ${
+                  cnicBack ? 'border-primary bg-primary/5' : 'border-border'
+                }`}
+              >
+                {cnicBack ? (
+                  <IoCheckmarkCircle size={28} className="text-primary" />
+                ) : (
+                  <IoCloudUpload size={28} className="text-text-muted" />
+                )}
+                <span className="text-xs text-text-secondary">
+                  {cnicBack ? 'Back ✓' : 'CNIC Back *'}
+                </span>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => setCnicBack(e.target.files?.[0] || null)}
+              />
+            </label>
+          </div>
         </div>
 
         <button onClick={handleSubmit} disabled={loading} className="btn-primary !mt-8">
