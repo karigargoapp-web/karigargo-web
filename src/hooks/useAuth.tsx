@@ -20,12 +20,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const fetchUserProfile = async (supaUser: SupaUser) => {
-    const { data } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', supaUser.id)
-      .single()
-    if (data) setUser(data as AppUser)
+    try {
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', supaUser.id)
+        .single()
+
+      if (data) {
+        setUser(data as AppUser)
+        return
+      }
+
+      const isOAuth =
+        supaUser.app_metadata?.provider === 'google' ||
+        supaUser.identities?.some(i => i.provider === 'google')
+      if (!isOAuth) return
+
+      const name =
+        supaUser.user_metadata?.full_name ||
+        supaUser.user_metadata?.name ||
+        supaUser.email?.split('@')[0] ||
+        'User'
+      const photo =
+        supaUser.user_metadata?.avatar_url ||
+        supaUser.user_metadata?.picture ||
+        null
+      const isWorkerFlow = window.location.pathname.includes('worker')
+      const role: UserRole = isWorkerFlow ? 'worker' : 'customer'
+
+      const { error: rpcErr } = await supabase.rpc('handle_signup_user', {
+        p_id: supaUser.id,
+        p_name: name,
+        p_email: supaUser.email || '',
+        p_phone: null,
+        p_role: role,
+        p_city: null,
+        p_profile_photo_url: photo,
+        p_verified: false,
+      })
+
+      if (!rpcErr && role === 'worker') {
+        await supabase.rpc('handle_signup_worker_profile', {
+          p_user_id: supaUser.id,
+          p_skills: [],
+          p_bio: null,
+          p_cnic: '',
+          p_cnic_front_url: '',
+          p_cnic_back_url: '',
+          p_certificate_urls: null,
+        })
+      }
+
+      const { data: newData } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', supaUser.id)
+        .single()
+      if (newData) setUser(newData as AppUser)
+    } catch {
+      console.error('[KarigarGo] Failed to fetch/create user profile')
+    }
   }
 
   useEffect(() => {
@@ -35,7 +90,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       if (session?.user) {
         fetchUserProfile(session.user)
@@ -48,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'local' })
     setSession(null)
     setUser(null)
   }
@@ -58,7 +115,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, user, role: user?.role ?? null, loading, signOut, refreshUser }}>
+    <AuthContext.Provider
+      value={{ session, user, role: user?.role ?? null, loading, signOut, refreshUser }}
+    >
       {children}
     </AuthContext.Provider>
   )

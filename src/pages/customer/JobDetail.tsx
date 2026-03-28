@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { IoArrowBack, IoStar, IoCheckmarkCircle, IoLocation, IoCalendar, IoChatbubble, IoCash, IoTime } from 'react-icons/io5'
+import { IoArrowBack, IoStar, IoCheckmarkCircle, IoLocation, IoCalendar, IoChatbubble, IoCash, IoTime, IoNavigate } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import type { Job, Bid } from '../../types'
+import { parseMediaUrls, isVideoUrl } from '../../utils/media'
 
 const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
   const R = 6371
@@ -205,7 +206,28 @@ export default function JobDetail() {
                   </div>
                 )}
 
-                {/* Action buttons */}
+                {bid.worker_lat && bid.worker_lng && (
+                  <div className="mt-3 bg-blue-50 rounded-xl p-3 border border-blue-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
+                          <IoLocation size={16} className="text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-text-primary">Worker's Location</p>
+                          <p className="text-[10px] text-text-muted">Last known position</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => window.open(`https://www.google.com/maps?q=${bid.worker_lat},${bid.worker_lng}`, '_blank')}
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-500 text-white text-[11px] font-medium rounded-lg"
+                      >
+                        <IoNavigate size={12} /> Open Map
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {!accepted && bid.status === 'pending' && (
                   <div className="flex gap-2 mt-3">
                     <button

@@ -32,6 +32,7 @@ import WorkerEarnings from './pages/worker/Earnings'
 import WorkerReviews from './pages/worker/ReviewsReceived'
 import ReviewCustomer from './pages/worker/ReviewCustomer'
 import WorkerProfile from './pages/worker/Profile'
+import WorkerMessages from './pages/worker/Messages'
 
 // Admin
 import AdminDashboard from './pages/admin/Dashboard'
@@ -106,6 +107,7 @@ export function AppRouter() {
           <Route path="/worker/earnings" element={<WorkerEarnings />} />
           <Route path="/worker/reviews" element={<WorkerReviews />} />
           <Route path="/worker/review-customer/:jobId" element={<ReviewCustomer />} />
+          <Route path="/worker/messages" element={<WorkerMessages />} />
           <Route path="/worker/profile" element={<WorkerProfile />} />
         </Route>
 

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoArrowBack, IoCamera, IoCheckmarkCircle, IoCloudUpload } from 'react-icons/io5'
+import { IoArrowBack, IoCamera, IoCheckmarkCircle, IoCloudUpload, IoLogoGoogle } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { SERVICE_CATEGORIES, PAKISTAN_CITIES } from '../../types'
 import toast from 'react-hot-toast'
@@ -45,7 +45,7 @@ export default function WorkerSignup() {
   }
 
   const nextStep = () => {
-    if (step === 0 && (!name || !phone || !email || !password)) return toast.error('Fill all fields')
+    if (step === 0 && (!name || !email || !password)) return toast.error('Fill all fields')
     if (step === 1 && (skills.length === 0 || !city)) return toast.error('Select at least one skill and a city')
     if (step === 2 && (!cnic || !cnicFront || !cnicBack)) return toast.error('CNIC info required')
     setStep(s => Math.min(s + 1, 3))
@@ -186,7 +186,7 @@ export default function WorkerSignup() {
               <input placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} />
             </div>
             <div>
-              <label className="text-sm text-text-secondary mb-1.5 block">Phone Number *</label>
+              <label className="text-sm text-text-secondary mb-1.5 block">Phone Number <span className="text-text-muted">(optional)</span></label>
               <input type="tel" placeholder="03001234567" value={phone} onChange={e => setPhone(e.target.value)} />
             </div>
             <div>

@@ -6,6 +6,7 @@ import { IoArrowBack, IoLocation, IoCalendar, IoWarning, IoChatbubble, IoNavigat
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import type { Job, Bid } from '../../types'
+import { parseMediaUrls, isVideoUrl } from '../../utils/media'
 import toast from 'react-hot-toast'
 
 /* ── Job location pin icon — Google Maps style ── */
@@ -128,8 +129,26 @@ export default function JobBid() {
             <span className="shrink-0 px-2.5 py-1 rounded-xl bg-primary/10 text-primary text-xs font-semibold">{job.category}</span>
           </div>
           <p className="text-sm text-text-secondary">{job.description}</p>
-          {job.image_url && (
-            <img src={job.image_url} alt="" className="w-full h-36 object-cover rounded-xl mt-3" />
+          {(() => {
+            const urls = parseMediaUrls(job.image_url)
+            if (urls.length === 0) return null
+            return (
+              <div className={`mt-3 ${urls.length > 1 ? 'flex gap-2 overflow-x-auto pb-2' : ''}`}>
+                {urls.map((url, i) =>
+                  isVideoUrl(url) ? (
+                    <video key={i} src={url} controls className={`${urls.length > 1 ? 'w-48 h-36 shrink-0' : 'w-full h-36'} object-cover rounded-xl`} preload="metadata" />
+                  ) : (
+                    <img key={i} src={url} alt="" className={`${urls.length > 1 ? 'w-48 h-36 shrink-0' : 'w-full h-36'} object-cover rounded-xl`} />
+                  )
+                )}
+              </div>
+            )
+          })()}
+          {job.voice_note_url && (
+            <div className="mt-3 bg-gray-50 rounded-xl p-3 border border-border">
+              <p className="text-xs font-medium text-text-secondary mb-2 flex items-center gap-1">🎤 Voice Note from Customer</p>
+              <audio src={job.voice_note_url} controls className="w-full h-9" preload="metadata" />
+            </div>
           )}
         </div>
 

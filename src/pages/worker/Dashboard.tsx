@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoHome, IoBriefcase, IoWallet, IoPerson, IoLocation, IoCalendar, IoCash } from 'react-icons/io5'
+import { IoHome, IoBriefcase, IoWallet, IoPerson, IoLocation, IoCalendar, IoCash, IoChatbubbleEllipses } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import NotificationBell from '../../components/NotificationBell'
@@ -191,7 +191,10 @@ export default function WorkerDashboard() {
           <IoHome size={22} /> Jobs
         </button>
         <button className={tab === 'bids' ? 'active' : ''} onClick={() => { setTab('bids'); nav('/worker/my-bids') }}>
-          <IoBriefcase size={22} /> Ongoing
+          <IoBriefcase size={22} /> My Jobs
+        </button>
+        <button className={tab === 'messages' ? 'active' : ''} onClick={() => { setTab('messages'); nav('/worker/messages') }}>
+          <IoChatbubbleEllipses size={22} /> Messages
         </button>
         <button className={tab === 'earn' ? 'active' : ''} onClick={() => { setTab('earn'); nav('/worker/earnings') }}>
           <IoWallet size={22} /> Earnings
