@@ -9,6 +9,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { SERVICE_CATEGORIES } from '../../types'
 import LocationPicker from '../../components/LocationPicker'
 import toast from 'react-hot-toast'
+import { validateJobBudget, validateJobDescription, validateJobTitle } from '../../lib/validation'
 
 interface MediaItem {
   file: File
@@ -138,8 +139,13 @@ export default function PostJob() {
   )
 
   const handleSubmit = async () => {
-    if (!title || !description || !category || !location || !budget) {
-      return toast.error('Please fill all required fields')
+    const err =
+      validateJobTitle(title) ||
+      validateJobDescription(description) ||
+      validateJobBudget(budget)
+    if (err) return toast.error(err)
+    if (!category || !location) {
+      return toast.error('Please choose a category and set a location')
     }
     if (!user) return
     setLoading(true)

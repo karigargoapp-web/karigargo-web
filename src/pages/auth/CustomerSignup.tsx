@@ -4,6 +4,15 @@ import { IoArrowBack, IoCamera, IoLogoGoogle, IoCheckmarkCircle, IoCloudUpload }
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
 import { PAKISTAN_CITIES } from '../../types'
+import {
+  formatCNICDisplay,
+  PASSWORD_HINT,
+  validateCNIC,
+  validateEmail,
+  validateImageFile,
+  validatePassword,
+  validatePersonName,
+} from '../../lib/validation'
 import toast from 'react-hot-toast'
 
 export default function CustomerSignup() {
@@ -45,11 +54,23 @@ export default function CustomerSignup() {
   }
 
   const handleSubmit = async () => {
-    if (!name || !email || !password) return toast.error('Name, email and password are required')
-    if (!cnic || !cnicFront || !cnicBack) return toast.error('CNIC number and both sides are required')
+    const fieldErr =
+      validatePersonName(name) ||
+      validateEmail(email) ||
+      validatePassword(password) ||
+      validateCNIC(cnic) ||
+      validateImageFile(cnicFront, { required: true }) ||
+      validateImageFile(cnicBack, { required: true })
+    if (fieldErr) return toast.error(fieldErr)
+    if (photo) {
+      const pe = validateImageFile(photo, { required: false })
+      if (pe) return toast.error(pe)
+    }
     if (submitLockRef.current) return
     submitLockRef.current = true
     setLoading(true)
+
+    const cnicFormatted = formatCNICDisplay(cnic)
 
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -99,7 +120,7 @@ export default function CustomerSignup() {
       const { error: cnicUpdateErr } = await supabase
         .from('users')
         .update({
-          cnic: cnic,
+          cnic: cnicFormatted,
           cnic_front_url: cnicFrontUrl,
           cnic_back_url: cnicBackUrl,
         })
@@ -191,6 +212,8 @@ export default function CustomerSignup() {
             placeholder="Enter your name"
             value={name}
             onChange={e => setName(e.target.value)}
+            maxLength={80}
+            autoComplete="name"
           />
         </div>
         <div>
@@ -209,7 +232,9 @@ export default function CustomerSignup() {
             placeholder="Create a password"
             value={password}
             onChange={e => setPassword(e.target.value)}
+            autoComplete="new-password"
           />
+          <p className="text-[11px] text-text-muted mt-1 leading-snug">{PASSWORD_HINT}</p>
         </div>
         <div>
           <label className="text-sm text-text-secondary mb-1.5 block">City</label>

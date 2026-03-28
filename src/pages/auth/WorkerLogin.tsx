@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { IoLogoGoogle, IoMail, IoLockClosed, IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
+import { validateEmail } from '../../lib/validation'
 import toast from 'react-hot-toast'
 
 type AuthTab = 'login' | 'signup'
@@ -18,7 +19,9 @@ export default function WorkerLogin() {
   const [showResend, setShowResend] = useState(false)
 
   const handleLogin = async () => {
-    if (!email || !password) return toast.error('Please enter email and password')
+    if (!password) return toast.error('Please enter your password')
+    const emailErr = validateEmail(email)
+    if (emailErr) return toast.error(emailErr)
     setLoading(true)
     setShowResend(false)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -38,7 +41,8 @@ export default function WorkerLogin() {
   }
 
   const handleResend = async () => {
-    if (!email) return toast.error('Enter your email above first')
+    const emailErr = validateEmail(email)
+    if (emailErr) return toast.error(emailErr)
     setResendLoading(true)
     const { error } = await supabase.auth.resend({ type: 'signup', email })
     setResendLoading(false)

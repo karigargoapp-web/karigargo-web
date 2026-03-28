@@ -78,6 +78,8 @@ create table if not exists users (
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now()
 );
+-- Client app enforces: email format; password strength (8+ chars, upper, lower, digit, special);
+-- Pakistan CNIC 13 digits; mobile 03XXXXXXXXX; name letters/spaces (see src/lib/validation.ts).
 
 -- ─────────── WORKER PROFILES ───────────
 -- Extra info for workers only (skills, CNIC docs, stats).

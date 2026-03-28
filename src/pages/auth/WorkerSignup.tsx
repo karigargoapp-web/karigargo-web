@@ -4,6 +4,18 @@ import { IoArrowBack, IoCamera, IoCheckmarkCircle, IoCloudUpload, IoLogoGoogle }
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
 import { SERVICE_CATEGORIES, PAKISTAN_CITIES } from '../../types'
+import {
+  formatCNICDisplay,
+  PASSWORD_HINT,
+  validateCertificateFile,
+  validateCNIC,
+  validateEmail,
+  validateImageFile,
+  validatePakistanPhone,
+  validatePassword,
+  validatePersonName,
+  validateWorkerBio,
+} from '../../lib/validation'
 import toast from 'react-hot-toast'
 
 const STEPS = ['Personal Info', 'Skills & City', 'Documents', 'Bio']
@@ -46,9 +58,30 @@ export default function WorkerSignup() {
   }
 
   const nextStep = () => {
-    if (step === 0 && (!name || !email || !password)) return toast.error('Fill all fields')
+    if (step === 0) {
+      const err =
+        validatePersonName(name) ||
+        validateEmail(email) ||
+        validatePassword(password) ||
+        validatePakistanPhone(phone, { optional: true })
+      if (err) return toast.error(err)
+      if (photo) {
+        const pe = validateImageFile(photo, { required: false })
+        if (pe) return toast.error(pe)
+      }
+    }
     if (step === 1 && (skills.length === 0 || !city)) return toast.error('Select at least one skill and a city')
-    if (step === 2 && (!cnic || !cnicFront || !cnicBack)) return toast.error('CNIC info required')
+    if (step === 2) {
+      const err =
+        validateCNIC(cnic) ||
+        validateImageFile(cnicFront, { required: true }) ||
+        validateImageFile(cnicBack, { required: true })
+      if (err) return toast.error(err)
+      for (const cert of certificates) {
+        const ce = validateCertificateFile(cert)
+        if (ce) return toast.error(ce)
+      }
+    }
     setStep(s => Math.min(s + 1, 3))
   }
 
@@ -60,6 +93,25 @@ export default function WorkerSignup() {
   }
 
   const handleSubmit = async () => {
+    const preErr =
+      validatePersonName(name) ||
+      validateEmail(email) ||
+      validatePassword(password) ||
+      validatePakistanPhone(phone, { optional: true }) ||
+      validateCNIC(cnic) ||
+      validateWorkerBio(bio) ||
+      validateImageFile(cnicFront, { required: true }) ||
+      validateImageFile(cnicBack, { required: true })
+    if (preErr) return toast.error(preErr)
+    if (photo) {
+      const pe = validateImageFile(photo, { required: false })
+      if (pe) return toast.error(pe)
+    }
+    for (const cert of certificates) {
+      const ce = validateCertificateFile(cert)
+      if (ce) return toast.error(ce)
+    }
+
     if (submitLockRef.current) return
     submitLockRef.current = true
     setLoading(true)
@@ -87,14 +139,19 @@ export default function WorkerSignup() {
       let photoUrl = ''
       if (photo) photoUrl = await uploadFile(photo, 'avatars')
 
-      let formatted = phone.trim()
-      if (formatted.startsWith('0')) formatted = '+92' + formatted.slice(1)
+      const rawPhone = phone.trim()
+      let phoneForDb: string | null = null
+      if (rawPhone) {
+        phoneForDb = rawPhone.startsWith('0') ? '+92' + rawPhone.slice(1) : rawPhone
+      }
+
+      const cnicFormatted = formatCNICDisplay(cnic)
 
       const { error: usersErr } = await supabase.rpc('handle_signup_user', {
         p_id: userId,
-        p_name: name,
-        p_email: email,
-        p_phone: formatted,
+        p_name: name.trim(),
+        p_email: email.trim(),
+        p_phone: phoneForDb,
         p_role: 'worker',
         p_city: city,
         p_profile_photo_url: photoUrl || null,
@@ -113,7 +170,7 @@ export default function WorkerSignup() {
         p_user_id: userId,
         p_skills: skills,
         p_bio: bio || null,
-        p_cnic: cnic,
+        p_cnic: cnicFormatted,
         p_cnic_front_url: cnicFrontUrl,
         p_cnic_back_url: cnicBackUrl,
         p_certificate_urls: certUrls.length > 0 ? certUrls : null,
@@ -188,7 +245,13 @@ export default function WorkerSignup() {
             </div>
             <div>
               <label className="text-sm text-text-secondary mb-1.5 block">Full Name *</label>
-              <input placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} />
+              <input
+                placeholder="Enter your name"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                maxLength={80}
+                autoComplete="name"
+              />
             </div>
             <div>
               <label className="text-sm text-text-secondary mb-1.5 block">Phone Number <span className="text-text-muted">(optional)</span></label>
@@ -200,7 +263,14 @@ export default function WorkerSignup() {
             </div>
             <div>
               <label className="text-sm text-text-secondary mb-1.5 block">Password *</label>
-              <input type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} />
+              <input
+                type="password"
+                placeholder="Create a password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+              <p className="text-[11px] text-text-muted mt-1 leading-snug">{PASSWORD_HINT}</p>
             </div>
           </div>
         )}
