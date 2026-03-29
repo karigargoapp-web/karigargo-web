@@ -110,9 +110,15 @@ export default function MyJobs() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-8">
             <IoBriefcase size={64} className="text-gray-300 mb-4" />
-            <p className="text-lg font-medium text-text-primary mb-2">No jobs found</p>
-            <p className="text-sm text-text-muted text-center mb-6">Post a task to see it here</p>
-            <button onClick={() => nav('/customer/post-job')} className="btn-primary px-6">Post a Job</button>
+            <p className="text-lg font-medium text-text-primary mb-2">
+              {tab === 'completed' ? 'No jobs completed yet' : tab === 'cancelled' ? 'No jobs cancelled' : 'No jobs found'}
+            </p>
+            <p className="text-sm text-text-muted text-center mb-6">
+              {tab === 'completed' ? 'Complete a job to see it here' : tab === 'cancelled' ? 'Jobs you cancel will appear here' : 'Post a Job to see it here'}
+            </p>
+            {tab !== 'completed' && tab !== 'cancelled' && (
+              <button onClick={() => nav('/customer/post-job')} className="btn-primary px-6">Post a Job</button>
+            )}
           </div>
         ) : (
           filtered.map(job => {

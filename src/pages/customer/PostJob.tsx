@@ -215,7 +215,7 @@ export default function PostJob() {
           <button onClick={() => nav(-1)}>
             <IoArrowBack size={24} className="text-white" />
           </button>
-          <h1 className="text-white text-xl font-medium">Post a Task</h1>
+          <h1 className="text-white text-xl font-medium">Post a Job</h1>
         </div>
       </div>
 
@@ -223,7 +223,7 @@ export default function PostJob() {
         <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
           <div>
             <label className="text-sm font-medium text-text-primary mb-1.5 block">
-              Task Title *
+              Job Title *
             </label>
             <input
               placeholder="e.g. Fix leaking tap"
@@ -265,7 +265,7 @@ export default function PostJob() {
         {/* Voice Note */}
         <div className="bg-white rounded-2xl shadow-sm p-5">
           <label className="text-sm font-medium text-text-primary mb-3 block">
-            Voice Note <span className="text-text-muted font-normal">(optional)</span>
+            Voice Note <span className="text-red-500">*</span> <span className="text-text-muted font-normal">(Explain the problem)</span>
           </label>
           {voiceBlob ? (
             <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-border">
@@ -319,7 +319,7 @@ export default function PostJob() {
         <div className="bg-white rounded-2xl shadow-sm p-5">
           <label className="text-sm font-medium text-text-primary mb-3 block">
             Attachments{' '}
-            <span className="text-text-muted font-normal">(photos & videos, optional)</span>
+            <span className="text-red-500">*</span> <span className="text-text-muted font-normal">(Please show the problem)</span>
           </label>
           {mediaItems.length > 0 && (
             <div className="grid grid-cols-3 gap-2 mb-3">
@@ -424,7 +424,6 @@ export default function PostJob() {
               value={budget}
               onChange={e => setBudget(e.target.value)}
             />
-            <p className="text-xs text-text-muted mt-1">Suggested: PKR 2,000 – 5,000</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -443,7 +442,7 @@ export default function PostJob() {
         </div>
 
         <button onClick={handleSubmit} disabled={loading} className="btn-primary">
-          {loading ? 'Posting...' : 'Post Task'}
+          {loading ? 'Posting...' : 'Post Job'}
         </button>
       </div>
     </div>

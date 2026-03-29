@@ -48,7 +48,7 @@ export default function WorkerDashboard() {
     <div className="min-h-screen bg-surface flex flex-col">
       {/* Header */}
       <div className="top-bar">
-        <p className="text-white text-lg font-medium text-center mb-5">Worker Home</p>
+        <p className="text-white text-lg font-medium text-center mb-5">KarigarGo</p>
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-white/70 text-sm">Welcome back,</p>

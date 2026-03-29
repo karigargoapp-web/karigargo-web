@@ -49,7 +49,17 @@ export default function WorkerSignup() {
   const [bio, setBio] = useState('')
 
   const toggleSkill = (s: string) => {
-    setSkills(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
+    setSkills(prev => {
+      if (prev.includes(s)) {
+        return prev.filter(x => x !== s)
+      }
+      // Limit to maximum 3 skills
+      if (prev.length >= 3) {
+        toast.error('You can select maximum 3 skills')
+        return prev
+      }
+      return [...prev, s]
+    })
   }
 
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,7 +129,7 @@ export default function WorkerSignup() {
       const { data: authData, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: emailRedirect('/worker/dashboard') },
+        options: { emailRedirectTo: emailRedirect('/email-confirmed') },
       })
       if (error) {
         const msg = error.message?.toLowerCase() || ''
@@ -137,7 +147,33 @@ export default function WorkerSignup() {
       if (!userId) throw new Error('Signup failed — could not get user ID')
 
       let photoUrl = ''
-      if (photo) photoUrl = await uploadFile(photo, 'avatars')
+      let cnicFrontUrl = ''
+      let cnicBackUrl = ''
+      const certUrls: string[] = new Array(certificates.length)
+
+      // Parallelize all uploads
+      const uploadTasks: Promise<any>[] = [
+        uploadFile(cnicFront!, 'cnic').then(url => cnicFrontUrl = url),
+        uploadFile(cnicBack!, 'cnic').then(url => cnicBackUrl = url)
+      ]
+
+      if (photo) {
+        const path = `${userId}_${Date.now()}.jpg`
+        uploadTasks.push(
+          supabase.storage.from('avatars').upload(path, photo).then(({ error }) => {
+            if (error) throw error
+            const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+            photoUrl = data.publicUrl
+          })
+        )
+      }
+
+      certificates.forEach((cert, index) => {
+        uploadTasks.push(uploadFile(cert, 'certificates').then(url => certUrls[index] = url))
+      })
+
+      // Wait for all uploads to complete concurrently
+      await Promise.all(uploadTasks)
 
       const rawPhone = phone.trim()
       const phoneForDb = rawPhone.startsWith('0') ? '+92' + rawPhone.slice(1) : rawPhone
@@ -156,13 +192,6 @@ export default function WorkerSignup() {
       })
       if (usersErr) throw usersErr
 
-      const cnicFrontUrl = await uploadFile(cnicFront!, 'cnic')
-      const cnicBackUrl = await uploadFile(cnicBack!, 'cnic')
-      const certUrls: string[] = []
-      for (const cert of certificates) {
-        certUrls.push(await uploadFile(cert, 'certificates'))
-      }
-
       const { error: profileErr } = await supabase.rpc('handle_signup_worker_profile', {
         p_user_id: userId,
         p_skills: skills,
@@ -174,7 +203,11 @@ export default function WorkerSignup() {
       })
       if (profileErr) throw profileErr
 
-      await supabase.from('users').update({ profile_complete: true }).eq('id', userId)
+      const { error: completeErr } = await supabase.rpc('handle_complete_signup_profile', {
+        p_id: userId,
+        p_profile_complete: true,
+      })
+      if (completeErr) throw completeErr
 
       setIsSubmitted(true)
     } catch (err: any) {
@@ -198,8 +231,8 @@ export default function WorkerSignup() {
         </div>
         <h2 className="text-2xl font-bold text-text-primary mb-2">Check your email</h2>
         <p className="text-text-secondary text-sm mb-8">
-          We've sent a verification link to<br/> <span className="font-semibold text-text-primary">{email}</span>. 
-          <br/><br/>
+          We've sent a verification link to<br /> <span className="font-semibold text-text-primary">{email}</span>.
+          <br /><br />
           Click the link in the email to activate your account. You will be logged in automatically!
         </p>
         <button onClick={() => nav('/login')} className="text-sm font-medium text-primary">
@@ -247,14 +280,28 @@ export default function WorkerSignup() {
               <input
                 placeholder="Enter your name"
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={e => {
+                  // Only allow letters and spaces
+                  const cleaned = e.target.value.replace(/[^a-zA-Z\s]/g, '')
+                  setName(cleaned)
+                }}
                 maxLength={80}
                 autoComplete="name"
               />
             </div>
             <div>
               <label className="text-sm text-text-secondary mb-1.5 block">Phone Number *</label>
-              <input type="tel" placeholder="03001234567" value={phone} onChange={e => setPhone(e.target.value)} />
+              <input 
+                type="tel" 
+                placeholder="03001234567" 
+                value={phone} 
+                onChange={e => {
+                  // Only allow numbers
+                  const cleaned = e.target.value.replace(/[^0-9]/g, '')
+                  setPhone(cleaned)
+                }}
+                maxLength={11}
+              />
             </div>
             <div>
               <label className="text-sm text-text-secondary mb-1.5 block">Email *</label>
@@ -278,7 +325,8 @@ export default function WorkerSignup() {
         {step === 1 && (
           <div className="space-y-5 animate-fade-in">
             <div>
-              <label className="section-title">Select Your Skills *</label>
+              <label className="section-title">Select Your Skills (Max 3) *</label>
+              <p className="text-xs text-text-muted mb-2">{skills.length}/3 skills selected</p>
               <div className="grid grid-cols-2 gap-2 mt-2">
                 {SERVICE_CATEGORIES.map(cat => (
                   <button key={cat.name} onClick={() => toggleSkill(cat.name)}
@@ -305,7 +353,16 @@ export default function WorkerSignup() {
           <div className="space-y-5 animate-fade-in">
             <div>
               <label className="text-sm text-text-secondary mb-1.5 block">CNIC Number *</label>
-              <input placeholder="12345-1234567-1" value={cnic} onChange={e => setCnic(e.target.value)} />
+              <input 
+                placeholder="12345-1234567-1" 
+                value={cnic} 
+                onChange={e => {
+                  // Only allow numbers and hyphens
+                  const cleaned = e.target.value.replace(/[^0-9-]/g, '')
+                  setCnic(cleaned)
+                }}
+                maxLength={15}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <label className="cursor-pointer">

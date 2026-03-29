@@ -20,6 +20,7 @@ export default function CustomerSignup() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
   const [city, setCity] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState('')
@@ -58,6 +59,7 @@ export default function CustomerSignup() {
       validatePersonName(name) ||
       validateEmail(email) ||
       validatePassword(password) ||
+      (!phone ? 'Please enter your phone number' : null) ||
       (!city ? 'Please select your city' : null) ||
       validateCNIC(cnic) ||
       validateImageFile(cnicFront, { required: true }) ||
@@ -77,7 +79,7 @@ export default function CustomerSignup() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: emailRedirect('/customer/home') },
+        options: { emailRedirectTo: emailRedirect('/email-confirmed') },
       })
       if (authError) {
         const msg = authError.message?.toLowerCase() || ''
@@ -95,22 +97,33 @@ export default function CustomerSignup() {
       }
 
       let photoUrl = ''
+      let cnicFrontUrl = ''
+      let cnicBackUrl = ''
+
+      const uploadTasks: Promise<any>[] = [
+        uploadFile(cnicFront!, 'cnic').then(url => cnicFrontUrl = url),
+        uploadFile(cnicBack!, 'cnic').then(url => cnicBackUrl = url)
+      ]
+
       if (photo) {
         const path = `avatars/${userId}_${Date.now()}.jpg`
-        const { error: upErr } = await supabase.storage.from('avatars').upload(path, photo)
-        if (upErr) throw upErr
-        const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-        photoUrl = data.publicUrl
+        uploadTasks.push(
+          supabase.storage.from('avatars').upload(path, photo).then(({ error }) => {
+            if (error) throw error
+            const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+            photoUrl = data.publicUrl
+          })
+        )
       }
 
-      const cnicFrontUrl = await uploadFile(cnicFront!, 'cnic')
-      const cnicBackUrl = await uploadFile(cnicBack!, 'cnic')
+      // Execute all uploads concurrently
+      await Promise.all(uploadTasks)
 
       const { error: insertErr } = await supabase.rpc('handle_signup_user', {
         p_id: userId,
         p_name: name,
         p_email: email,
-        p_phone: null,
+        p_phone: phone,
         p_role: 'customer',
         p_city: city || null,
         p_profile_photo_url: photoUrl || null,
@@ -118,18 +131,14 @@ export default function CustomerSignup() {
       })
       if (insertErr) throw insertErr
 
-      const { error: cnicUpdateErr } = await supabase
-        .from('users')
-        .update({
-          cnic: cnicFormatted,
-          cnic_front_url: cnicFrontUrl,
-          cnic_back_url: cnicBackUrl,
-          profile_complete: true,
-        })
-        .eq('id', userId)
-      if (cnicUpdateErr) {
-        console.warn('CNIC fields update:', cnicUpdateErr.message)
-      }
+      const { error: completeErr } = await supabase.rpc('handle_complete_signup_profile', {
+        p_id: userId,
+        p_cnic: cnicFormatted,
+        p_cnic_front_url: cnicFrontUrl,
+        p_cnic_back_url: cnicBackUrl,
+        p_profile_complete: true,
+      })
+      if (completeErr) throw completeErr
 
       setIsSubmitted(true)
     } catch (err: unknown) {
@@ -213,7 +222,11 @@ export default function CustomerSignup() {
           <input
             placeholder="Enter your name"
             value={name}
-            onChange={e => setName(e.target.value)}
+            onChange={e => {
+              // Only allow letters and spaces
+              const cleaned = e.target.value.replace(/[^a-zA-Z\s]/g, '')
+              setName(cleaned)
+            }}
             maxLength={80}
             autoComplete="name"
           />
@@ -225,6 +238,20 @@ export default function CustomerSignup() {
             placeholder="you@example.com"
             value={email}
             onChange={e => setEmail(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="text-sm text-text-secondary mb-1.5 block">Phone Number *</label>
+          <input
+            type="tel"
+            placeholder="03XX-XXXXXXX"
+            value={phone}
+            onChange={e => {
+              // Only allow numbers
+              const cleaned = e.target.value.replace(/[^0-9]/g, '')
+              setPhone(cleaned)
+            }}
+            maxLength={11}
           />
         </div>
         <div>
@@ -262,15 +289,19 @@ export default function CustomerSignup() {
             <input
               placeholder="12345-1234567-1"
               value={cnic}
-              onChange={e => setCnic(e.target.value)}
+              onChange={e => {
+                // Only allow numbers and hyphens
+                const cleaned = e.target.value.replace(/[^0-9-]/g, '')
+                setCnic(cleaned)
+              }}
+              maxLength={15}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <label className="cursor-pointer">
               <div
-                className={`h-28 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition ${
-                  cnicFront ? 'border-primary bg-primary/5' : 'border-border'
-                }`}
+                className={`h-28 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition ${cnicFront ? 'border-primary bg-primary/5' : 'border-border'
+                  }`}
               >
                 {cnicFront ? (
                   <IoCheckmarkCircle size={28} className="text-primary" />
@@ -290,9 +321,8 @@ export default function CustomerSignup() {
             </label>
             <label className="cursor-pointer">
               <div
-                className={`h-28 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition ${
-                  cnicBack ? 'border-primary bg-primary/5' : 'border-border'
-                }`}
+                className={`h-28 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition ${cnicBack ? 'border-primary bg-primary/5' : 'border-border'
+                  }`}
               >
                 {cnicBack ? (
                   <IoCheckmarkCircle size={28} className="text-primary" />

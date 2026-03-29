@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoArrowBack, IoCamera, IoChevronForward, IoLogOut, IoPerson, IoLockClosed, IoNotifications, IoHelpCircle } from 'react-icons/io5'
+import { IoArrowBack, IoCamera, IoChevronForward, IoLogOut, IoLockClosed, IoNotifications, IoHelpCircle, IoLanguage } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
-import { PAKISTAN_CITIES } from '../../types'
 import toast from 'react-hot-toast'
 
 export default function CustomerProfile() {
@@ -85,65 +84,77 @@ export default function CustomerProfile() {
       </div>
 
       <div className="flex-1 px-5 py-5 space-y-4 overflow-y-auto pb-8">
-        {/* Personal Info section */}
+        {/* Personal Info section - Read Only */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <p className="text-sm font-semibold text-text-primary px-5 pt-4 pb-3">Personal Info</p>
 
-          {editing ? (
-            <div className="px-5 pb-5 space-y-3 border-t border-border pt-3">
-              <div><label className="text-xs text-text-muted">Name</label><input value={name} onChange={e => setName(e.target.value)} className="mt-1" /></div>
-              <div><label className="text-xs text-text-muted">Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} className="mt-1" /></div>
-              <div><label className="text-xs text-text-muted">City</label>
-                <select value={city} onChange={e => setCity(e.target.value)} className="mt-1">
-                  <option value="">Select city</option>
-                  {PAKISTAN_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+          {/* Name - Display Only */}
+          <div className="px-5 py-3 border-t border-border">
+            <label className="text-xs text-text-muted block mb-1">Name</label>
+            <p className="text-sm font-medium text-text-primary">{user?.name || '-'}</p>
+          </div>
+
+          {/* Email - Display Only */}
+          <div className="px-5 py-3 border-t border-border">
+            <label className="text-xs text-text-muted block mb-1">Email</label>
+            <p className="text-sm font-medium text-text-primary">{user?.email || '-'}</p>
+          </div>
+
+          {/* Phone - Display Only */}
+          <div className="px-5 py-3 border-t border-border">
+            <label className="text-xs text-text-muted block mb-1">Phone</label>
+            <p className="text-sm font-medium text-text-primary">{user?.phone || '-'}</p>
+          </div>
+
+          {/* City - Display Only */}
+          <div className="px-5 py-3 border-t border-border">
+            <label className="text-xs text-text-muted block mb-1">City</label>
+            <p className="text-sm font-medium text-text-primary">{user?.city || '-'}</p>
+          </div>
+        </div>
+
+        {/* Security */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <p className="text-sm font-semibold text-text-primary px-5 pt-4 pb-3">Security</p>
+          <button
+            onClick={handleChangePassword}
+            className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <IoLockClosed size={17} className="text-text-muted" />
               </div>
-              <div className="flex gap-2 pt-1">
-                <button onClick={() => setEditing(false)} className="btn-ghost flex-1">Cancel</button>
-                <button onClick={handleSave} disabled={saving} className="btn-primary flex-1">{saving ? 'Saving...' : 'Save'}</button>
+              <div className="text-left">
+                <p className="text-sm font-medium text-text-primary">Change Password</p>
+                <p className="text-xs text-text-muted">Update your password</p>
               </div>
             </div>
-          ) : (
-            <>
-              <button
-                onClick={() => setEditing(true)}
-                className="w-full flex items-center justify-between px-5 py-3.5 border-b border-border"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                    <IoPerson size={18} className="text-text-muted" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-text-primary">Personal Info</p>
-                    <p className="text-xs text-text-muted">Name, phone, city</p>
-                  </div>
-                </div>
-                <IoChevronForward className="text-text-muted" />
-              </button>
-
-              <button
-                onClick={handleChangePassword}
-                className="w-full flex items-center justify-between px-5 py-3.5 border-b border-border"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                    <IoLockClosed size={17} className="text-text-muted" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-text-primary">Change Password</p>
-                    <p className="text-xs text-text-muted">Update your password</p>
-                  </div>
-                </div>
-                <IoChevronForward className="text-text-muted" />
-              </button>
-            </>
-          )}
+            <IoChevronForward className="text-text-muted" />
+          </button>
         </div>
 
         {/* Preferences */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <p className="text-sm font-semibold text-text-primary px-5 pt-4 pb-1">Preferences</p>
+          
+          {/* Language */}
+          <button
+            onClick={() => nav('/language')}
+            className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <IoLanguage size={18} className="text-text-muted" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-text-primary">Language</p>
+                <p className="text-xs text-text-muted">English / Urdu</p>
+              </div>
+            </div>
+            <IoChevronForward className="text-text-muted" />
+          </button>
+
+          {/* Notifications */}
           <div className="flex items-center justify-between px-5 py-3.5 border-t border-border">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
@@ -164,7 +175,10 @@ export default function CustomerProfile() {
         {/* Support */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <p className="text-sm font-semibold text-text-primary px-5 pt-4 pb-1">Support</p>
-          <button className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border">
+          <button 
+            onClick={() => nav('/help-support')}
+            className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
+          >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
                 <IoHelpCircle size={19} className="text-text-muted" />

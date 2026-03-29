@@ -55,9 +55,8 @@ export default function CustomerHome() {
     <div className="min-h-screen bg-surface flex flex-col">
       {/* Top bar */}
       <div className="top-bar">
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-center mb-1">
           <p className="text-white text-xl font-semibold">KarigarGo</p>
-          <NotificationBell />
         </div>
         <div className="flex items-center justify-between mb-5">
           <div>
@@ -81,7 +80,7 @@ export default function CustomerHome() {
           className="w-full py-3.5 bg-white rounded-2xl flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition"
         >
           <IoAdd size={20} className="text-primary" />
-          <span className="text-primary font-medium text-sm">Post a Task</span>
+          <span className="text-primary font-medium text-sm">Post a Job</span>
         </button>
       </div>
 
@@ -180,7 +179,11 @@ export default function CustomerHome() {
           <IoBriefcase size={22} /> My Jobs
         </button>
         <button className={tab === 'chat' ? 'active' : ''} onClick={() => { setTab('chat'); nav('/customer/messages') }}>
-          <IoChatbubbleEllipses size={22} /> Messages
+          <div className="relative">
+            <IoChatbubbleEllipses size={22} />
+            <NotificationBell />
+          </div>
+          Messages
         </button>
         <button className={tab === 'profile' ? 'active' : ''} onClick={() => { setTab('profile'); nav('/customer/profile') }}>
           <IoPerson size={22} /> Profile

@@ -711,6 +711,28 @@ end;
 $$ language plpgsql security definer;
 
 
+-- Completes signup by setting CNIC docs and profile_complete flag.
+-- Needed because after supabase.auth.signUp() with email-confirmation ON
+-- the session is null, so direct .update() calls fail (RLS: auth.uid() = id).
+-- This function runs as SECURITY DEFINER and bypasses RLS.
+create or replace function public.handle_complete_signup_profile(
+  p_id              uuid,
+  p_cnic            text     default null,
+  p_cnic_front_url  text     default null,
+  p_cnic_back_url   text     default null,
+  p_profile_complete boolean default true
+) returns void as $$
+begin
+  update public.users
+  set cnic            = coalesce(p_cnic, cnic),
+      cnic_front_url  = coalesce(p_cnic_front_url, cnic_front_url),
+      cnic_back_url   = coalesce(p_cnic_back_url, cnic_back_url),
+      profile_complete = p_profile_complete
+  where id = p_id;
+end;
+$$ language plpgsql security definer;
+
+
 create or replace function public.handle_signup_worker_profile(
   p_user_id          uuid,
   p_skills           text[],

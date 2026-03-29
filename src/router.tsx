@@ -6,6 +6,7 @@ import Login from './pages/auth/Login'
 import WorkerLogin from './pages/auth/WorkerLogin'
 import CustomerSignup from './pages/auth/CustomerSignup'
 import WorkerSignup from './pages/auth/WorkerSignup'
+import EmailConfirmed from './pages/auth/EmailConfirmed'
 
 // Customer
 import CustomerHome from './pages/customer/Home'
@@ -22,6 +23,8 @@ import TrackingScreen from './pages/customer/TrackingScreen'
 
 // Shared
 import ChatPage from './pages/ChatPage'
+import HelpSupport from './pages/shared/HelpSupport'
+import LanguageSelection from './pages/shared/LanguageSelection'
 
 // Worker
 import WorkerDashboard from './pages/worker/Dashboard'
@@ -106,6 +109,9 @@ export function AppRouter() {
           <Route path="/signup/worker" element={<WorkerSignup />} />
         </Route>
 
+        {/* Email confirmation - accessible without auth check */}
+        <Route path="/email-confirmed" element={<EmailConfirmed />} />
+
         {/* Profile completion (logged in but profile_complete = false) */}
         <Route element={<ProfileCompletionRoute />}>
           <Route path="/complete-profile/customer" element={<CompleteCustomerProfile />} />
@@ -130,6 +136,12 @@ export function AppRouter() {
         {/* Shared chat route — accessible to any authenticated user */}
         <Route element={<ProtectedRoute />}>
           <Route path="/chat/:jobId" element={<ChatPage />} />
+        </Route>
+
+        {/* Shared help and language routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/help-support" element={<HelpSupport />} />
+          <Route path="/language" element={<LanguageSelection />} />
         </Route>
 
         {/* Worker routes */}
