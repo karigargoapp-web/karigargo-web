@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoHome, IoBriefcase, IoChatbubbleEllipses, IoPerson, IoAdd, IoCall, IoChatbubble } from 'react-icons/io5'
+import { IoHome, IoBriefcase, IoChatbubbleEllipses, IoPerson, IoAdd, IoCall, IoChatbubble, IoNotifications } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { useI18n } from '../../lib/i18n'
 import NotificationBell from '../../components/NotificationBell'
 import type { Job } from '../../types'
 import { SERVICE_CATEGORIES } from '../../types'
@@ -10,6 +11,7 @@ import { SERVICE_CATEGORIES } from '../../types'
 export default function CustomerHome() {
   const nav = useNavigate()
   const { user } = useAuth()
+  const { t } = useI18n()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('home')
@@ -29,17 +31,28 @@ export default function CustomerHome() {
     fetch()
   }, [user])
 
-  // Auto-scroll categories
+  // Auto-scroll categories with smooth infinite loop
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
+    
+    let animationId: number
     let pos = 0
-    const interval = setInterval(() => {
-      pos += 1
-      if (pos >= el.scrollWidth / 2) pos = 0
+    const speed = 0.5 // pixels per frame
+    
+    const animate = () => {
+      pos += speed
+      // Reset when we've scrolled through one set of duplicated items
+      const singleSetWidth = el.scrollWidth / 3
+      if (pos >= singleSetWidth) {
+        pos = 0
+      }
       el.scrollLeft = pos
-    }, 30)
-    return () => clearInterval(interval)
+      animationId = requestAnimationFrame(animate)
+    }
+    
+    animationId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animationId)
   }, [])
 
   const ongoing = jobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled')
@@ -56,7 +69,7 @@ export default function CustomerHome() {
       {/* Top bar */}
       <div className="top-bar">
         <div className="flex items-center justify-center mb-1">
-          <p className="text-white text-xl font-semibold">KarigarGo</p>
+          <p className="text-white text-xl font-semibold">{t('home')}</p>
         </div>
         <div className="flex items-center justify-between mb-5">
           <div>
@@ -80,14 +93,14 @@ export default function CustomerHome() {
           className="w-full py-3.5 bg-white rounded-2xl flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition"
         >
           <IoAdd size={20} className="text-primary" />
-          <span className="text-primary font-medium text-sm">Post a Job</span>
+          <span className="text-primary font-medium text-sm">{t('postAJob')}</span>
         </button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-5 py-5 pb-24">
         {/* Service Categories — auto-scrolling */}
-        <p className="section-title">Service Categories</p>
+        <p className="section-title">{t('serviceCategories')}</p>
         <div ref={scrollRef} className="flex gap-4 overflow-x-hidden pb-3 -mx-1 px-1">
           {[...SERVICE_CATEGORIES, ...SERVICE_CATEGORIES, ...SERVICE_CATEGORIES].map((cat, idx) => (
             <div key={`${cat.name}-${idx}`} className="flex flex-col items-center min-w-[64px]">
@@ -104,14 +117,14 @@ export default function CustomerHome() {
 
         {/* Ongoing Jobs */}
         <div className="flex items-center justify-between mt-6 mb-3">
-          <p className="section-title !mb-0">Ongoing Jobs</p>
-          <button onClick={() => nav('/customer/my-jobs')} className="text-sm text-primary font-medium">View All</button>
+          <p className="section-title !mb-0">{t('ongoingJobs')}</p>
+          <button onClick={() => nav('/customer/my-jobs')} className="text-sm text-primary font-medium">{t('viewAll')}</button>
         </div>
 
         {loading ? (
           <div className="card p-6 text-center text-sm text-text-muted">Loading...</div>
         ) : ongoing.length === 0 ? (
-          <div className="card p-6 text-center text-sm text-text-muted">No ongoing jobs</div>
+          <div className="card p-6 text-center text-sm text-text-muted">{t('noOngoingJobs')}</div>
         ) : (
           ongoing.slice(0, 3).map(job => (
             <div key={job.id} className="card mb-3 overflow-hidden">
@@ -144,10 +157,10 @@ export default function CustomerHome() {
 
         {/* Completed Jobs */}
         <div className="flex items-center justify-between mt-6 mb-3">
-          <p className="section-title !mb-0">Completed Jobs</p>
+          <p className="section-title !mb-0">{t('completedJobs')}</p>
         </div>
         {completed.length === 0 ? (
-          <div className="card p-6 text-center text-sm text-text-muted">No completed jobs yet</div>
+          <div className="card p-6 text-center text-sm text-text-muted">{t('noCompletedJobs')}</div>
         ) : (
           completed.slice(0, 3).map(job => (
             <div key={job.id} className="card p-4 mb-3">
@@ -173,20 +186,24 @@ export default function CustomerHome() {
       {/* Bottom nav */}
       <div className="bottom-nav fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px]">
         <button className={tab === 'home' ? 'active' : ''} onClick={() => setTab('home')}>
-          <IoHome size={22} /> Home
+          <IoHome size={22} /> {t('home')}
         </button>
         <button className={tab === 'jobs' ? 'active' : ''} onClick={() => { setTab('jobs'); nav('/customer/my-jobs') }}>
-          <IoBriefcase size={22} /> My Jobs
+          <IoBriefcase size={22} /> {t('myJobs')}
         </button>
         <button className={tab === 'chat' ? 'active' : ''} onClick={() => { setTab('chat'); nav('/customer/messages') }}>
+          <IoChatbubbleEllipses size={22} />
+          {t('messages')}
+        </button>
+        <button className={tab === 'notifications' ? 'active' : ''} onClick={() => { setTab('notifications'); nav('/customer/notifications') }}>
           <div className="relative">
-            <IoChatbubbleEllipses size={22} />
-            <NotificationBell />
+            <IoNotifications size={22} />
+            <NotificationBell showBadgeOnly={true} />
           </div>
-          Messages
+          {t('notifications')}
         </button>
         <button className={tab === 'profile' ? 'active' : ''} onClick={() => { setTab('profile'); nav('/customer/profile') }}>
-          <IoPerson size={22} /> Profile
+          <IoPerson size={22} /> {t('profile')}
         </button>
       </div>
     </div>

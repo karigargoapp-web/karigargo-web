@@ -19,6 +19,8 @@ import ReviewWorker from './pages/customer/ReviewWorker'
 import ViewWorkerProfile from './pages/customer/WorkerProfile'
 import CustomerProfile from './pages/customer/Profile'
 import CustomerMessages from './pages/customer/Messages'
+import ChangePassword from './pages/customer/ChangePassword'
+import CustomerNotifications from './pages/customer/Notifications'
 import TrackingScreen from './pages/customer/TrackingScreen'
 
 // Shared
@@ -36,6 +38,7 @@ import WorkerReviews from './pages/worker/ReviewsReceived'
 import ReviewCustomer from './pages/worker/ReviewCustomer'
 import WorkerProfile from './pages/worker/Profile'
 import WorkerMessages from './pages/worker/Messages'
+import WorkerChangePassword from './pages/worker/ChangePassword'
 
 // Admin
 import AdminDashboard from './pages/admin/Dashboard'
@@ -128,13 +131,15 @@ export function AppRouter() {
           <Route path="/customer/receipt/:jobId" element={<CustomerReceipt />} />
           <Route path="/customer/review/:jobId" element={<ReviewWorker />} />
           <Route path="/customer/worker/:workerId" element={<ViewWorkerProfile />} />
-          <Route path="/customer/messages" element={<CustomerMessages />} />
           <Route path="/customer/tracking/:jobId" element={<TrackingScreen />} />
           <Route path="/customer/profile" element={<CustomerProfile />} />
         </Route>
 
         {/* Shared chat route — accessible to any authenticated user */}
         <Route element={<ProtectedRoute />}>
+          <Route path="/customer/messages" element={<CustomerMessages />} />
+          <Route path="/customer/notifications" element={<CustomerNotifications />} />
+          <Route path="/customer/change-password" element={<ChangePassword />} />
           <Route path="/chat/:jobId" element={<ChatPage />} />
         </Route>
 
@@ -155,6 +160,7 @@ export function AppRouter() {
           <Route path="/worker/review-customer/:jobId" element={<ReviewCustomer />} />
           <Route path="/worker/messages" element={<WorkerMessages />} />
           <Route path="/worker/profile" element={<WorkerProfile />} />
+          <Route path="/worker/change-password" element={<WorkerChangePassword />} />
         </Route>
 
         {/* Admin routes */}

@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoLogoGoogle, IoMail, IoLockClosed } from 'react-icons/io5'
+import { IoLogoGoogle, IoMail, IoLockClosed, IoLanguage } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
 import { assertEmailConfirmed, assertPortalRole } from '../../lib/authRole'
 import { validateEmail } from '../../lib/validation'
+import { useI18n } from '../../lib/i18n'
 import toast from 'react-hot-toast'
 
 type AuthTab = 'login' | 'signup'
 
 export default function Login() {
   const nav = useNavigate()
+  const { t, language } = useI18n()
   const [activeTab, setActiveTab] = useState<AuthTab>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -73,37 +75,37 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <div className="bg-primary px-6 pt-12 pb-8 rounded-b-3xl text-center">
-        <img src="/logo.png" alt="KarigarGo" className="w-16 h-16 mx-auto mb-2 rounded-2xl" />
-        <p className="text-white/80 text-sm mt-1">Har Kaam Ka Karigar, Bas Ek Tap Dur</p>
-        <div className="flex gap-3 mt-6">
-          <div className="flex-1 bg-white/15 border border-white/30 rounded-2xl py-3.5 px-3">
-            <p className="text-white font-semibold text-sm">Customer</p>
-            <p className="text-white/60 text-xs mt-0.5">Hire workers</p>
+      <div className="bg-primary px-6 pt-8 pb-6 rounded-b-3xl text-center">
+        <img src="/logo.png" alt="KarigarGo" className="w-14 h-14 mx-auto mb-2 rounded-2xl" />
+        <p className="text-white/80 text-sm mt-1">{t('tagline')}</p>
+        <div className="flex gap-3 mt-4">
+          <div className="flex-1 bg-white/15 border border-white/30 rounded-2xl py-3 px-3">
+            <p className="text-white font-semibold text-sm">{t('customer')}</p>
+            <p className="text-white/60 text-xs mt-0.5">{t('hireWorkers')}</p>
           </div>
           <button
             onClick={() => nav('/login/worker')}
-            className="flex-1 bg-white/5 border border-white/10 rounded-2xl py-3.5 px-3 text-left hover:bg-white/10 transition"
+            className="flex-1 bg-white/5 border border-white/10 rounded-2xl py-3 px-3 text-left hover:bg-white/10 transition"
           >
-            <p className="text-white/60 font-medium text-sm">Worker</p>
-            <p className="text-white/40 text-xs mt-0.5">Find jobs</p>
+            <p className="text-white/60 font-medium text-sm">{t('worker')}</p>
+            <p className="text-white/40 text-xs mt-0.5">{t('findJobs')}</p>
           </button>
         </div>
       </div>
 
-      <div className="flex-1 px-6 pt-6 pb-8 overflow-y-auto">
-        <div className="flex bg-surface rounded-xl p-1 mb-6">
+      <div className="flex-1 px-6 pt-4 pb-8 overflow-y-auto">
+        <div className="flex bg-surface rounded-xl p-1 mb-4">
           <button
             onClick={() => setActiveTab('login')}
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition ${activeTab === 'login' ? 'bg-white shadow-sm text-primary' : 'text-text-muted'}`}
           >
-            Login
+            {t('login')}
           </button>
           <button
             onClick={() => setActiveTab('signup')}
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition ${activeTab === 'signup' ? 'bg-white shadow-sm text-primary' : 'text-text-muted'}`}
           >
-            Sign Up
+            {t('signup')}
           </button>
         </div>
 
@@ -171,29 +173,27 @@ export default function Login() {
             </button>
           </div>
         ) : (
-          <div className="space-y-4 animate-fade-in text-center py-6">
-            <p className="text-text-secondary text-sm mb-6">Create a new account to get started</p>
-            <button onClick={() => nav('/signup/customer')} className="btn-primary">
-              Customer Registration
+          <div className="space-y-3 animate-fade-in text-center py-4">
+            <p className="text-text-secondary text-sm mb-4">{t('createAccountToGetStarted')}</p>
+            <button onClick={() => nav('/signup/customer')} className="btn-primary py-3">
+              {t('customerRegistration')}
             </button>
-            <div className="flex items-center gap-3 my-4">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-text-muted">or</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-            <button onClick={handleGoogle} className="btn-ghost flex items-center justify-center gap-3">
+            <button onClick={handleGoogle} className="btn-ghost flex items-center justify-center gap-3 py-3">
               <IoLogoGoogle size={18} className="text-[#4285F4]" />
-              Sign up with Google
+              {t('signUpWithGoogle')}
             </button>
-            <p className="text-xs text-text-muted pt-2">
-              Are you a worker?{' '}
-              <button onClick={() => nav('/signup/worker')} className="text-primary font-medium">
-                Register here
-              </button>
-            </p>
           </div>
         )}
       </div>
+
+      {/* Language Toggle - Bottom Right */}
+      <button
+        onClick={() => nav('/language')}
+        className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-2 bg-white/90 rounded-lg shadow-sm text-sm text-text-primary"
+      >
+        <IoLanguage size={16} className="text-primary" />
+        <span>{language === 'ur' ? t('urdu') : t('english')}</span>
+      </button>
     </div>
   )
 }

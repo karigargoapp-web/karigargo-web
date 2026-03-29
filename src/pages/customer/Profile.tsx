@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoArrowBack, IoCamera, IoChevronForward, IoLogOut, IoLockClosed, IoNotifications, IoHelpCircle, IoLanguage } from 'react-icons/io5'
+import { IoArrowBack, IoCamera, IoChevronForward, IoLogOut, IoLockClosed, IoNotifications, IoHelpCircle, IoLanguage, IoPerson } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { useI18n } from '../../lib/i18n'
 import toast from 'react-hot-toast'
 
 export default function CustomerProfile() {
   const nav = useNavigate()
   const { user, signOut, refreshUser } = useAuth()
+  const { t } = useI18n()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(user?.name || '')
   const [phone, setPhone] = useState(user?.phone || '')
@@ -39,12 +41,8 @@ export default function CustomerProfile() {
     toast.success('Photo updated')
   }
 
-  const handleChangePassword = async () => {
-    const newPw = prompt('Enter new password (min 6 chars):')
-    if (!newPw || newPw.length < 6) return toast.error('Password too short')
-    const { error } = await supabase.auth.updateUser({ password: newPw })
-    if (error) return toast.error(error.message)
-    toast.success('Password changed')
+  const handleChangePassword = () => {
+    nav('/customer/change-password')
   }
 
   const handleLogout = async () => {
@@ -60,7 +58,7 @@ export default function CustomerProfile() {
           <button onClick={() => nav('/customer/home')}>
             <IoArrowBack size={24} className="text-white" />
           </button>
-          <h1 className="text-white text-xl font-medium">Profile</h1>
+          <h1 className="text-white text-xl font-medium">{t('profile')}</h1>
         </div>
 
         {/* Avatar + info */}
@@ -84,49 +82,39 @@ export default function CustomerProfile() {
       </div>
 
       <div className="flex-1 px-5 py-5 space-y-4 overflow-y-auto pb-8">
-        {/* Personal Info section - Read Only */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <p className="text-sm font-semibold text-text-primary px-5 pt-4 pb-3">Personal Info</p>
+        {/* Personal Information Section */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+          <p className="text-base font-semibold text-text-primary px-5 pt-4 pb-3">{t('personalInfo')}</p>
 
-          {/* Name - Display Only */}
-          <div className="px-5 py-3 border-t border-border">
-            <label className="text-xs text-text-muted block mb-1">Name</label>
-            <p className="text-sm font-medium text-text-primary">{user?.name || '-'}</p>
-          </div>
+          {/* Personal Info Row */}
+          <button
+            onClick={() => {}}
+            className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                <IoPerson size={18} className="text-blue-500" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-text-primary">{t('personalInfo')}</p>
+                <p className="text-xs text-text-muted">{t('name')}, {t('city')}, Email</p>
+              </div>
+            </div>
+            <IoChevronForward className="text-text-muted" />
+          </button>
 
-          {/* Email - Display Only */}
-          <div className="px-5 py-3 border-t border-border">
-            <label className="text-xs text-text-muted block mb-1">Email</label>
-            <p className="text-sm font-medium text-text-primary">{user?.email || '-'}</p>
-          </div>
-
-          {/* Phone - Display Only */}
-          <div className="px-5 py-3 border-t border-border">
-            <label className="text-xs text-text-muted block mb-1">Phone</label>
-            <p className="text-sm font-medium text-text-primary">{user?.phone || '-'}</p>
-          </div>
-
-          {/* City - Display Only */}
-          <div className="px-5 py-3 border-t border-border">
-            <label className="text-xs text-text-muted block mb-1">City</label>
-            <p className="text-sm font-medium text-text-primary">{user?.city || '-'}</p>
-          </div>
-        </div>
-
-        {/* Security */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <p className="text-sm font-semibold text-text-primary px-5 pt-4 pb-3">Security</p>
+          {/* Change Password Row */}
           <button
             onClick={handleChangePassword}
             className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                <IoLockClosed size={17} className="text-text-muted" />
+              <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center">
+                <IoLockClosed size={17} className="text-yellow-600" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-text-primary">Change Password</p>
-                <p className="text-xs text-text-muted">Update your password</p>
+                <p className="text-sm font-medium text-text-primary">{t('changePassword')}</p>
+                <p className="text-xs text-text-muted">{t('updatePassword')}</p>
               </div>
             </div>
             <IoChevronForward className="text-text-muted" />
@@ -134,58 +122,58 @@ export default function CustomerProfile() {
         </div>
 
         {/* Preferences */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <p className="text-sm font-semibold text-text-primary px-5 pt-4 pb-1">Preferences</p>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+          <p className="text-base font-semibold text-text-primary px-5 pt-4 pb-3">{t('preferences')}</p>
           
+          {/* Notifications Toggle */}
+          <div className="flex items-center justify-between px-5 py-3.5 border-t border-border">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center">
+                <IoNotifications size={18} className="text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-text-primary">{t('notifications')}</p>
+                <p className="text-xs text-text-muted">{t('receiveJobUpdates')}</p>
+              </div>
+            </div>
+            {/* Toggle Switch */}
+            <div className="w-11 h-6 bg-primary rounded-full flex items-center justify-end pr-0.5">
+              <div className="w-5 h-5 bg-white rounded-full shadow" />
+            </div>
+          </div>
+
           {/* Language */}
           <button
             onClick={() => nav('/language')}
             className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                <IoLanguage size={18} className="text-text-muted" />
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                <IoLanguage size={18} className="text-blue-500" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-text-primary">Language</p>
-                <p className="text-xs text-text-muted">English / Urdu</p>
+                <p className="text-sm font-medium text-text-primary">{t('language')}</p>
+                <p className="text-xs text-text-muted">{t('english')}</p>
               </div>
             </div>
             <IoChevronForward className="text-text-muted" />
           </button>
-
-          {/* Notifications */}
-          <div className="flex items-center justify-between px-5 py-3.5 border-t border-border">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                <IoNotifications size={18} className="text-text-muted" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-text-primary">Notifications</p>
-                <p className="text-xs text-text-muted">Receive job updates</p>
-              </div>
-            </div>
-            {/* Simple visual toggle */}
-            <div className="w-11 h-6 bg-primary rounded-full flex items-center justify-end pr-0.5">
-              <div className="w-5 h-5 bg-white rounded-full shadow" />
-            </div>
-          </div>
         </div>
 
         {/* Support */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <p className="text-sm font-semibold text-text-primary px-5 pt-4 pb-1">Support</p>
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+          <p className="text-base font-semibold text-text-primary px-5 pt-4 pb-3">{t('support')}</p>
           <button 
             onClick={() => nav('/help-support')}
             className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                <IoHelpCircle size={19} className="text-text-muted" />
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+                <IoHelpCircle size={19} className="text-red-500" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-text-primary">Help & Support</p>
-                <p className="text-xs text-text-muted">FAQs and contact</p>
+                <p className="text-sm font-medium text-text-primary">{t('helpSupport')}</p>
+                <p className="text-xs text-text-muted">{t('faqsAndContact')}</p>
               </div>
             </div>
             <IoChevronForward className="text-text-muted" />
@@ -197,7 +185,7 @@ export default function CustomerProfile() {
           onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 bg-white border border-red-200 text-red-500 py-4 rounded-2xl text-sm font-medium shadow-sm"
         >
-          <IoLogOut size={18} /> Logout
+          <IoLogOut size={18} /> {t('logout')}
         </button>
       </div>
     </div>

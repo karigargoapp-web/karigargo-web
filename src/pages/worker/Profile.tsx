@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoArrowBack, IoCamera, IoChevronForward, IoLogOut, IoStar, IoCheckmarkCircle, IoLockClosed, IoHelpCircle } from 'react-icons/io5'
+import { IoArrowBack, IoCamera, IoChevronForward, IoLogOut, IoStar, IoCheckmarkCircle, IoLockClosed, IoHelpCircle, IoNotifications, IoLanguage, IoPerson } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { SERVICE_CATEGORIES, PAKISTAN_CITIES } from '../../types'
@@ -50,12 +50,8 @@ export default function WorkerProfilePage() {
     toast.success('Photo updated')
   }
 
-  const handleChangePassword = async () => {
-    const newPw = prompt('Enter new password (min 6 chars):')
-    if (!newPw || newPw.length < 6) return toast.error('Password too short')
-    const { error } = await supabase.auth.updateUser({ password: newPw })
-    if (error) return toast.error(error.message)
-    toast.success('Password changed')
+  const handleChangePassword = () => {
+    nav('/worker/change-password')
   }
 
   return (
@@ -114,75 +110,116 @@ export default function WorkerProfilePage() {
       </div>
 
       <div className="flex-1 px-5 py-5 space-y-4 overflow-y-auto pb-8">
-        {/* Details / Edit */}
-        <div className="bg-white rounded-2xl shadow-sm p-5">
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-sm font-semibold text-text-primary">Details</p>
-            <button onClick={() => setEditing(!editing)} className="text-xs text-primary font-medium">{editing ? 'Cancel' : 'Edit'}</button>
-          </div>
-          {editing ? (
-            <div className="space-y-3">
-              <div><label className="text-xs text-text-muted">Name</label><input value={name} onChange={e => setName(e.target.value)} className="mt-1" /></div>
-              <div><label className="text-xs text-text-muted">Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} className="mt-1" /></div>
-              <div><label className="text-xs text-text-muted">City</label>
-                <select value={city} onChange={e => setCity(e.target.value)} className="mt-1">
-                  <option value="">Select city</option>
-                  {PAKISTAN_CITIES.map(c => <option key={c}>{c}</option>)}
-                </select>
+        {/* Personal Information Section */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+          <p className="text-base font-semibold text-text-primary px-5 pt-4 pb-3">Personal Information</p>
+
+          {/* Personal Info Row */}
+          <button
+            onClick={() => {}}
+            className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                <IoPerson size={18} className="text-blue-500" />
               </div>
-              <div>
-                <label className="text-xs text-text-muted">Skills</label>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  {SERVICE_CATEGORIES.map(c => (
-                    <button key={c.name} onClick={() => toggleSkill(c.name)}
-                      className={`text-xs px-2 py-2 rounded-lg border transition ${skills.includes(c.name) ? 'border-primary bg-primary/5 text-primary' : 'border-border text-text-secondary'}`}>
-                      {c.icon} {c.name}
-                    </button>
-                  ))}
-                </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-text-primary">Personal Information</p>
+                <p className="text-xs text-text-muted">Name, Address, Email</p>
               </div>
-              <div><label className="text-xs text-text-muted">Bio</label><textarea rows={3} value={bio} onChange={e => setBio(e.target.value)} className="resize-none mt-1" /></div>
-              <button onClick={handleSave} disabled={saving} className="btn-primary">{saving ? 'Saving...' : 'Save'}</button>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm"><span className="text-text-secondary">Name</span><span className="text-text-primary">{user?.name}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-text-secondary">Email</span><span className="text-text-primary text-xs">{user?.email}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-text-secondary">Phone</span><span className="text-text-primary">{user?.phone || '—'}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-text-secondary">City</span><span className="text-text-primary">{user?.city || '—'}</span></div>
-              {profile?.skills && profile.skills.length > 0 && (
-                <div>
-                  <span className="text-sm text-text-secondary">Skills</span>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {profile.skills.map(s => <span key={s} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{s}</span>)}
-                  </div>
-                </div>
-              )}
-              {profile?.bio && <div><span className="text-sm text-text-secondary">Bio</span><p className="text-sm text-text-primary mt-1">{profile.bio}</p></div>}
+            <IoChevronForward className="text-text-muted" />
+          </button>
+
+          {/* Change Password Row */}
+          <button
+            onClick={handleChangePassword}
+            className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center">
+                <IoLockClosed size={17} className="text-yellow-600" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-text-primary">Change Password</p>
+                <p className="text-xs text-text-muted">Update your password</p>
+              </div>
             </div>
-          )}
+            <IoChevronForward className="text-text-muted" />
+          </button>
         </div>
 
-        {/* Actions */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <button onClick={() => nav('/worker/reviews')} className="w-full flex items-center justify-between px-5 py-3.5 border-b border-border">
+        {/* Preferences */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+          <p className="text-base font-semibold text-text-primary px-5 pt-4 pb-3">Preferences</p>
+          
+          {/* Notifications Toggle */}
+          <div className="flex items-center justify-between px-5 py-3.5 border-t border-border">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"><IoStar size={18} className="text-text-muted" /></div>
-              <div className="text-left"><p className="text-sm font-medium text-text-primary">My Reviews</p><p className="text-xs text-text-muted">See customer feedback</p></div>
+              <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center">
+                <IoNotifications size={18} className="text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-text-primary">Notifications</p>
+                <p className="text-xs text-text-muted">Receive job updates</p>
+              </div>
+            </div>
+            {/* Toggle Switch */}
+            <div className="w-11 h-6 bg-primary rounded-full flex items-center justify-end pr-0.5">
+              <div className="w-5 h-5 bg-white rounded-full shadow" />
+            </div>
+          </div>
+
+          {/* Language */}
+          <button
+            onClick={() => nav('/language')}
+            className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                <IoLanguage size={18} className="text-blue-500" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-text-primary">Language</p>
+                <p className="text-xs text-text-muted">English</p>
+              </div>
             </div>
             <IoChevronForward className="text-text-muted" />
           </button>
-          <button onClick={handleChangePassword} className="w-full flex items-center justify-between px-5 py-3.5 border-b border-border">
+
+          {/* My Reviews */}
+          <button
+            onClick={() => nav('/worker/reviews')}
+            className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"><IoLockClosed size={17} className="text-text-muted" /></div>
-              <div className="text-left"><p className="text-sm font-medium text-text-primary">Change Password</p><p className="text-xs text-text-muted">Update your password</p></div>
+              <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
+                <IoStar size={18} className="text-purple-500" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-text-primary">My Reviews</p>
+                <p className="text-xs text-text-muted">See customer feedback</p>
+              </div>
             </div>
             <IoChevronForward className="text-text-muted" />
           </button>
-          <button className="w-full flex items-center justify-between px-5 py-3.5">
+        </div>
+
+        {/* Support */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+          <p className="text-base font-semibold text-text-primary px-5 pt-4 pb-3">Support</p>
+          <button 
+            onClick={() => nav('/help-support')}
+            className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"><IoHelpCircle size={19} className="text-text-muted" /></div>
-              <div className="text-left"><p className="text-sm font-medium text-text-primary">Help & Support</p><p className="text-xs text-text-muted">FAQs and contact</p></div>
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+                <IoHelpCircle size={19} className="text-red-500" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-text-primary">Help & Support</p>
+                <p className="text-xs text-text-muted">FAQs and contact</p>
+              </div>
             </div>
             <IoChevronForward className="text-text-muted" />
           </button>

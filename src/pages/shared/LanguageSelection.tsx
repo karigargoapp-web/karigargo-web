@@ -1,19 +1,15 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoArrowBack, IoCheckmark } from 'react-icons/io5'
 import { useAuth } from '../../hooks/useAuth'
+import { useI18n } from '../../lib/i18n'
 
 export default function LanguageSelection() {
   const nav = useNavigate()
   const { user } = useAuth()
-  const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'ur'>(() => {
-    return (localStorage.getItem('language') as 'en' | 'ur') || 'en'
-  })
+  const { language, setLanguage, t } = useI18n()
 
   const handleLanguageSelect = (lang: 'en' | 'ur') => {
-    setSelectedLanguage(lang)
-    localStorage.setItem('language', lang)
-    // Could also set a context or state here to trigger language change
+    setLanguage(lang)
   }
 
   const handleContinue = () => {
@@ -28,7 +24,7 @@ export default function LanguageSelection() {
           <button onClick={() => nav(user?.role === 'customer' ? '/customer/profile' : '/worker/profile')}>
             <IoArrowBack size={24} className="text-white" />
           </button>
-          <h1 className="text-white text-xl font-medium">Select Language</h1>
+          <h1 className="text-white text-xl font-medium">{t('language')}</h1>
         </div>
       </div>
 
@@ -43,7 +39,7 @@ export default function LanguageSelection() {
           <button
             onClick={() => handleLanguageSelect('en')}
             className={`w-full flex items-center justify-between p-5 rounded-xl border-2 transition ${
-              selectedLanguage === 'en'
+              language === 'en'
                 ? 'border-primary bg-[#f0f9f0]'
                 : 'border-border bg-white'
             }`}
@@ -53,11 +49,11 @@ export default function LanguageSelection() {
                 🇬🇧
               </div>
               <div className="text-left">
-                <p className="text-base font-medium text-text-primary">English</p>
-                <p className="text-sm text-text-muted">Default Language</p>
+                <p className="text-base font-medium text-text-primary">{t('english')}</p>
+                <p className="text-sm text-text-muted">English</p>
               </div>
             </div>
-            {selectedLanguage === 'en' && (
+            {language === 'en' && (
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                 <IoCheckmark size={20} className="text-white" />
               </div>
@@ -68,7 +64,7 @@ export default function LanguageSelection() {
           <button
             onClick={() => handleLanguageSelect('ur')}
             className={`w-full flex items-center justify-between p-5 rounded-xl border-2 transition ${
-              selectedLanguage === 'ur'
+              language === 'ur'
                 ? 'border-primary bg-[#f0f9f0]'
                 : 'border-border bg-white'
             }`}
@@ -78,11 +74,11 @@ export default function LanguageSelection() {
                 🇵🇰
               </div>
               <div className="text-left">
-                <p className="text-base font-medium text-text-primary">Urdu</p>
-                <p className="text-sm text-text-muted">National Language</p>
+                <p className="text-base font-medium text-text-primary">{t('urdu')}</p>
+                <p className="text-sm text-text-muted">اردو</p>
               </div>
             </div>
-            {selectedLanguage === 'ur' && (
+            {language === 'ur' && (
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                 <IoCheckmark size={20} className="text-white" />
               </div>
@@ -102,7 +98,7 @@ export default function LanguageSelection() {
           onClick={handleContinue}
           className="w-full bg-primary text-white py-4 rounded-xl font-medium mt-8"
         >
-          Continue
+          {t('ok')}
         </button>
       </div>
     </div>

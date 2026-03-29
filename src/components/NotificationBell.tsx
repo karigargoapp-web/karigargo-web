@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { getBrowserNotificationPermission, showBrowserNotification } from '../lib/browserNotifications'
 import type { Notification } from '../types'
 
-export default function NotificationBell() {
+export default function NotificationBell({ showBadgeOnly = false }: { showBadgeOnly?: boolean }) {
   const { user } = useAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [open, setOpen] = useState(false)
@@ -54,12 +54,22 @@ export default function NotificationBell() {
     setOpen(!open)
   }
 
+  // Badge-only mode for Messages button
+  if (showBadgeOnly) {
+    return unread > 0 ? (
+      <span className="absolute -top-1 -right-1 w-4 h-4 bg-danger text-white text-[9px] font-bold rounded-full flex items-center justify-center z-10">
+        {unread > 9 ? '9+' : unread}
+      </span>
+    ) : null
+  }
+
+  // Full notification bell for top bar
   return (
     <div className="relative">
       <button onClick={handleToggle} className="relative p-1">
-        <IoNotifications size={24} className="text-white" />
+        <IoNotifications size={20} className="text-white" />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-danger text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-danger text-white text-[9px] font-bold rounded-full flex items-center justify-center">
             {unread > 9 ? '9+' : unread}
           </span>
         )}

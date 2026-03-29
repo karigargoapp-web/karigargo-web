@@ -39,6 +39,47 @@ export default function CustomerSignup() {
     }
   }
 
+  const handleCamera = async () => {
+    try {
+      // Request camera access
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user' } // Front camera for selfie
+      })
+      
+      // Create video element to capture
+      const video = document.createElement('video')
+      video.srcObject = stream
+      video.autoplay = true
+      
+      // Create canvas to capture image
+      const canvas = document.createElement('canvas')
+      canvas.width = 800
+      canvas.height = 800
+      
+      // Wait for video to load
+      video.onloadedmetadata = () => {
+        // Capture image after 1 second (for camera focus)
+        setTimeout(() => {
+          const ctx = canvas.getContext('2d')
+          ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
+          
+          // Convert to blob
+          canvas.toBlob((blob) => {
+            if (blob) {
+              setPhoto(blob)
+              setPhotoPreview(URL.createObjectURL(blob))
+            }
+            // Stop camera stream
+            stream.getTracks().forEach(track => track.stop())
+          }, 'image/jpeg', 0.8)
+        }, 1000)
+      }
+    } catch (error) {
+      // Fallback to file upload if camera access denied
+      document.getElementById('photo-input')?.click()
+    }
+  }
+
   const handleGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -204,7 +245,7 @@ export default function CustomerSignup() {
 
         {/* Profile Photo */}
         <div className="flex justify-center">
-          <label className="cursor-pointer">
+          <div className="flex flex-col items-center gap-3">
             <div className="w-24 h-24 rounded-full bg-surface border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
               {photoPreview ? (
                 <img src={photoPreview} className="w-full h-full object-cover" />
@@ -212,9 +253,28 @@ export default function CustomerSignup() {
                 <IoCamera size={28} className="text-text-muted" />
               )}
             </div>
-            <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
-            <p className="text-xs text-primary text-center mt-2">Upload Photo</p>
-          </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleCamera}
+                className="px-4 py-2 bg-primary text-white text-xs rounded-lg flex items-center gap-1"
+              >
+                <IoCamera size={14} />
+                Take Selfie
+              </button>
+              <label className="px-4 py-2 bg-gray-100 text-gray-700 text-xs rounded-lg flex items-center gap-1 cursor-pointer">
+                <IoCloudUpload size={14} />
+                Upload
+                <input
+                  id="photo-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePhoto}
+                />
+              </label>
+            </div>
+          </div>
         </div>
 
         <div>
