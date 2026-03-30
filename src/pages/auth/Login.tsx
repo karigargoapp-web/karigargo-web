@@ -78,7 +78,7 @@ export default function Login() {
     <div className="min-h-screen bg-white flex flex-col">
       <div className="bg-primary px-6 pt-12 pb-8 rounded-b-3xl text-center">
         <img src="/logo.png" alt="KarigarGo" className="w-16 h-16 mx-auto mb-2 rounded-2xl" />
-        <p className="text-white/80 text-sm mt-1">{t('tagline')}</p>
+        <p className="text-white/80 text-sm mt-1">Har Kaam Ka Karigar, Bas Ek Tap Dur</p>
         <div className="flex gap-3 mt-6">
           <div className="flex-1 bg-white/15 border border-white/30 rounded-2xl py-3.5 px-3">
             <p className="text-white font-semibold text-sm">{t('customer')}</p>
