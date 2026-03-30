@@ -94,8 +94,10 @@ export default function WorkerSignup() {
     
     canvas.toBlob((blob) => {
       if (blob) {
-        setPhoto(blob)
-        setPhotoPreview(URL.createObjectURL(blob))
+        // Convert Blob to File
+        const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' })
+        setPhoto(file)
+        setPhotoPreview(URL.createObjectURL(file))
       }
       streamRef.current?.getTracks().forEach(track => track.stop())
       setShowCamera(false)
