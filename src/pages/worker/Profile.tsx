@@ -116,7 +116,7 @@ export default function WorkerProfilePage() {
 
           {/* Personal Info Row */}
           <button
-            onClick={() => {}}
+            onClick={() => nav('/worker/personal-info')}
             className="w-full flex items-center justify-between px-5 py-3.5 border-t border-border"
           >
             <div className="flex items-center gap-3">

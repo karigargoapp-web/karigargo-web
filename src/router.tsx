@@ -21,6 +21,7 @@ import CustomerProfile from './pages/customer/Profile'
 import CustomerMessages from './pages/customer/Messages'
 import ChangePassword from './pages/customer/ChangePassword'
 import CustomerNotifications from './pages/customer/Notifications'
+import CustomerPersonalInfo from './pages/customer/PersonalInfo'
 import TrackingScreen from './pages/customer/TrackingScreen'
 
 // Shared
@@ -39,6 +40,7 @@ import ReviewCustomer from './pages/worker/ReviewCustomer'
 import WorkerProfile from './pages/worker/Profile'
 import WorkerMessages from './pages/worker/Messages'
 import WorkerChangePassword from './pages/worker/ChangePassword'
+import WorkerPersonalInfo from './pages/worker/PersonalInfo'
 
 // Admin
 import AdminDashboard from './pages/admin/Dashboard'
@@ -140,6 +142,7 @@ export function AppRouter() {
           <Route path="/customer/messages" element={<CustomerMessages />} />
           <Route path="/customer/notifications" element={<CustomerNotifications />} />
           <Route path="/customer/change-password" element={<ChangePassword />} />
+          <Route path="/customer/personal-info" element={<CustomerPersonalInfo />} />
           <Route path="/chat/:jobId" element={<ChatPage />} />
         </Route>
 
@@ -161,6 +164,7 @@ export function AppRouter() {
           <Route path="/worker/messages" element={<WorkerMessages />} />
           <Route path="/worker/profile" element={<WorkerProfile />} />
           <Route path="/worker/change-password" element={<WorkerChangePassword />} />
+          <Route path="/worker/personal-info" element={<WorkerPersonalInfo />} />
         </Route>
 
         {/* Admin routes */}

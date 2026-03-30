@@ -16,6 +16,7 @@ export default function CompleteCustomerProfile() {
   const { user, refreshUser } = useAuth()
 
   const [city, setCity] = useState('')
+  const [phone, setPhone] = useState('')
   const [cnic, setCnic] = useState('')
   const [cnicFront, setCnicFront] = useState<File | null>(null)
   const [cnicBack, setCnicBack] = useState<File | null>(null)
@@ -32,6 +33,7 @@ export default function CompleteCustomerProfile() {
   const handleSubmit = async () => {
     const err =
       (!city ? 'Please select your city' : null) ||
+      (!phone || phone.length < 10 ? 'Please enter a valid phone number' : null) ||
       validateCNIC(cnic) ||
       validateImageFile(cnicFront, { required: true }) ||
       validateImageFile(cnicBack, { required: true })
@@ -51,6 +53,7 @@ export default function CompleteCustomerProfile() {
         .from('users')
         .update({
           city: city || null,
+          phone: phone || null,
           cnic: cnicFormatted,
           cnic_front_url: cnicFrontUrl,
           cnic_back_url: cnicBackUrl,
@@ -113,6 +116,23 @@ export default function CompleteCustomerProfile() {
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
+        </div>
+
+        {/* Phone Number */}
+        <div className="bg-surface rounded-2xl p-4 space-y-4">
+          <p className="text-sm font-semibold text-text-primary">Contact Information *</p>
+          
+          <div>
+            <label className="text-sm text-text-secondary mb-1.5 block">Phone Number *</label>
+            <input
+              type="tel"
+              placeholder="03XX-XXXXXXX"
+              value={phone}
+              onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+              maxLength={11}
+            />
+            <p className="text-xs text-text-muted mt-1">Format: 03XXXXXXXXX (11 digits)</p>
+          </div>
         </div>
 
         {/* CNIC section */}
