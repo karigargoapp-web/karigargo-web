@@ -47,7 +47,9 @@ export default function Login() {
       const msg = error.message?.toLowerCase() || ''
       if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
         setShowResend(true)
-        toast.error('Please verify your email before signing in.')
+        toast.error('Email not verified. Check your inbox for the confirmation link.')
+      } else if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('not found') || msg.includes('no user')) {
+        toast.error('Invalid credentials. Please check your email and password.')
       } else {
         toast.error(error.message)
       }

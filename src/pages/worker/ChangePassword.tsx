@@ -20,19 +20,34 @@ export default function WorkerChangePassword() {
     if (!currentPassword || !newPassword || !confirmPassword) {
       return toast.error('Please fill in all fields')
     }
-    if (newPassword.length < 6) {
-      return toast.error('New password must be at least 6 characters')
+    if (newPassword.length < 8) {
+      return toast.error('New password must be at least 8 characters')
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      return toast.error('New password must contain at least one uppercase letter')
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      return toast.error('New password must contain at least one number')
     }
     if (newPassword !== confirmPassword) {
       return toast.error('New passwords do not match')
     }
+    if (currentPassword === newPassword) {
+      return toast.error('New password must be different from current password')
+    }
 
     setLoading(true)
     try {
-      // Update password using Supabase
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
+      // Re-authenticate with current password to verify it's correct
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: currentPassword,
       })
+      if (signInErr) {
+        return toast.error('Current password is incorrect')
+      }
+      // Now update to the new password
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
       if (error) throw error
       toast.success('Password updated successfully')
       nav('/worker/profile')

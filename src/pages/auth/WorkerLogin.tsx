@@ -31,12 +31,11 @@ export default function WorkerLogin() {
     if (error) {
       setLoading(false)
       const msg = error.message?.toLowerCase() || ''
-      if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('not found')) {
+      if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
         setShowResend(true)
-        toast.error('Invalid credentials. If you just registered, confirm your email first.')
-      } else if (msg.includes('email not confirmed')) {
-        setShowResend(true)
-        toast.error('Please confirm your email before logging in.')
+        toast.error('Email not verified. Check your inbox for the confirmation link.')
+      } else if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('not found') || msg.includes('no user')) {
+        toast.error('Invalid credentials. Please check your email and password.')
       } else {
         toast.error(error.message)
       }
@@ -70,6 +69,7 @@ export default function WorkerLogin() {
   }
 
   const handleGoogle = async () => {
+    localStorage.setItem('oauth-intended-role', 'worker')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: emailRedirect('/worker/dashboard') },

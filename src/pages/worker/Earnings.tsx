@@ -167,10 +167,6 @@ export default function Earnings() {
           )}
         </div>
 
-        {/* Withdraw — coming soon */}
-        <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-400 py-4 rounded-2xl text-sm font-medium cursor-not-allowed">
-          💳 Withdraw Earnings (Coming Soon)
-        </button>
       </div>
     </div>
   )

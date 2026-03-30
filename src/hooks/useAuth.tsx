@@ -60,8 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supaUser.user_metadata?.avatar_url ||
         supaUser.user_metadata?.picture ||
         null
-      const isWorkerFlow = window.location.pathname.includes('worker')
-      const role: UserRole = isWorkerFlow ? 'worker' : 'customer'
+      const intendedRole = localStorage.getItem('oauth-intended-role')
+      localStorage.removeItem('oauth-intended-role')
+      const role: UserRole = intendedRole === 'worker' ? 'worker' : 'customer'
 
       const { error: rpcErr } = await supabase.rpc('handle_signup_user', {
         p_id: supaUser.id,
