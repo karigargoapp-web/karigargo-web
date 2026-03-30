@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoArrowBack, IoCamera, IoLogoGoogle, IoCheckmarkCircle, IoCloudUpload } from 'react-icons/io5'
+import { IoArrowBack, IoCamera, IoLogoGoogle, IoCheckmarkCircle, IoCloudUpload, IoClose } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
 import { PAKISTAN_CITIES } from '../../types'
@@ -29,6 +29,9 @@ export default function CustomerSignup() {
   const [cnicBack, setCnicBack] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const submitLockRef = useRef(false)
 
   const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,44 +44,46 @@ export default function CustomerSignup() {
 
   const handleCamera = async () => {
     try {
-      // Request camera access
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' } // Front camera for selfie
+        video: { facingMode: 'user' }
       })
-      
-      // Create video element to capture
-      const video = document.createElement('video')
-      video.srcObject = stream
-      video.autoplay = true
-      
-      // Create canvas to capture image
-      const canvas = document.createElement('canvas')
-      canvas.width = 800
-      canvas.height = 800
-      
-      // Wait for video to load
-      video.onloadedmetadata = () => {
-        // Capture image after 1 second (for camera focus)
-        setTimeout(() => {
-          const ctx = canvas.getContext('2d')
-          ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
-          
-          // Convert to blob
-          canvas.toBlob((blob) => {
-            if (blob) {
-              setPhoto(blob)
-              setPhotoPreview(URL.createObjectURL(blob))
-            }
-            // Stop camera stream
-            stream.getTracks().forEach(track => track.stop())
-          }, 'image/jpeg', 0.8)
-        }, 1000)
-      }
+      streamRef.current = stream
+      setShowCamera(true)
     } catch (error) {
-      // Fallback to file upload if camera access denied
+      toast.error('Camera access denied. Please use upload option.')
       document.getElementById('photo-input')?.click()
     }
   }
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !streamRef.current) return
+    
+    const canvas = document.createElement('canvas')
+    canvas.width = 800
+    canvas.height = 800
+    const ctx = canvas.getContext('2d')
+    ctx?.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height)
+    
+    canvas.toBlob((blob) => {
+      if (blob) {
+        setPhoto(blob)
+        setPhotoPreview(URL.createObjectURL(blob))
+      }
+      streamRef.current?.getTracks().forEach(track => track.stop())
+      setShowCamera(false)
+    }, 'image/jpeg', 0.8)
+  }
+
+  const closeCamera = () => {
+    streamRef.current?.getTracks().forEach(track => track.stop())
+    setShowCamera(false)
+  }
+
+  useEffect(() => {
+    if (showCamera && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current
+    }
+  }, [showCamera])
 
   const handleGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -414,6 +419,35 @@ export default function CustomerSignup() {
           </button>
         </p>
       </div>
+
+      {/* Camera Preview Modal */}
+      {showCamera && (
+        <div className="fixed inset-0 bg-black z-50 flex flex-col">
+          <div className="flex items-center justify-between p-4 bg-black">
+            <p className="text-white font-medium">Take Selfie</p>
+            <button onClick={closeCamera} className="text-white p-2">
+              <IoClose size={24} />
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center bg-black relative">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+              <button
+                onClick={capturePhoto}
+                className="w-16 h-16 rounded-full border-4 border-white bg-primary flex items-center justify-center"
+              >
+                <div className="w-12 h-12 rounded-full bg-white" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
