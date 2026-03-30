@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 import { IoArrowBack, IoCamera, IoCheckmarkCircle, IoCloudUpload, IoLogoGoogle, IoClose, IoLanguage } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
@@ -23,7 +24,10 @@ const STEPS = ['Personal Info', 'Skills & City', 'Documents', 'Bio']
 
 export default function WorkerSignup() {
   const nav = useNavigate()
+  const { user, refreshUser } = useAuth()
   const { language, setLanguage } = useI18n()
+  // Google OAuth completion flow: user already signed in but profile_complete = false
+  const isOAuthCompletion = !!user && !user.profile_complete
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -37,6 +41,15 @@ export default function WorkerSignup() {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  // Pre-fill from Google session
+  useEffect(() => {
+    if (isOAuthCompletion && user) {
+      setName(user.name || '')
+      setEmail(user.email || '')
+      if (user.profile_photo_url) setPhotoPreview(user.profile_photo_url)
+    }
+  }, [isOAuthCompletion, user])
 
   // Step 2 — skills & city
   const [skills, setSkills] = useState<string[]>([])
@@ -119,15 +132,20 @@ export default function WorkerSignup() {
 
   const nextStep = () => {
     if (step === 0) {
-      const err =
-        validatePersonName(name) ||
-        validateEmail(email) ||
-        validatePassword(password) ||
-        validatePakistanPhone(phone, { optional: false })
-      if (err) return toast.error(err)
-      if (photo) {
-        const pe = validateImageFile(photo, { required: false })
-        if (pe) return toast.error(pe)
+      if (isOAuthCompletion) {
+        const err = validatePakistanPhone(phone, { optional: false })
+        if (err) return toast.error(err)
+      } else {
+        const err =
+          validatePersonName(name) ||
+          validateEmail(email) ||
+          validatePassword(password) ||
+          validatePakistanPhone(phone, { optional: false })
+        if (err) return toast.error(err)
+        if (photo) {
+          const pe = validateImageFile(photo, { required: false })
+          if (pe) return toast.error(pe)
+        }
       }
     }
     if (step === 1 && (skills.length === 0 || !city)) return toast.error('Select at least one skill and a city')
@@ -153,19 +171,20 @@ export default function WorkerSignup() {
   }
 
   const handleSubmit = async () => {
-    const preErr =
-      validatePersonName(name) ||
-      validateEmail(email) ||
-      validatePassword(password) ||
-      validatePakistanPhone(phone, { optional: false }) ||
-      validateCNIC(cnic) ||
-      validateWorkerBio(bio) ||
-      validateImageFile(cnicFront, { required: true }) ||
-      validateImageFile(cnicBack, { required: true })
+    const phoneErr = validatePakistanPhone(phone, { optional: false })
+    const cnicErr = validateCNIC(cnic)
+    const bioErr = validateWorkerBio(bio)
+    const cnicFrontErr = validateImageFile(cnicFront, { required: true })
+    const cnicBackErr = validateImageFile(cnicBack, { required: true })
+    const preErr = phoneErr || cnicErr || bioErr || cnicFrontErr || cnicBackErr
     if (preErr) return toast.error(preErr)
-    if (photo) {
-      const pe = validateImageFile(photo, { required: false })
-      if (pe) return toast.error(pe)
+    if (!isOAuthCompletion) {
+      const authErr = validatePersonName(name) || validateEmail(email) || validatePassword(password)
+      if (authErr) return toast.error(authErr)
+      if (photo) {
+        const pe = validateImageFile(photo, { required: false })
+        if (pe) return toast.error(pe)
+      }
     }
     for (const cert of certificates) {
       const ce = validateCertificateFile(cert)
@@ -176,44 +195,49 @@ export default function WorkerSignup() {
     submitLockRef.current = true
     setLoading(true)
     try {
-      const { data: authData, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: emailRedirect('/email-confirmed') },
-      })
-      if (error) {
-        const msg = error.message?.toLowerCase() || ''
-        if (msg.includes('rate') || msg.includes('too many')) {
-          toast.error('Too many signup attempts. Please wait a few minutes and try again.')
-        } else {
-          toast.error(error.message)
+      let userId: string
+
+      if (isOAuthCompletion) {
+        // Already authenticated via Google OAuth — skip signUp()
+        userId = user!.id
+      } else {
+        const { data: authData, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: emailRedirect('/email-confirmed') },
+        })
+        if (error) {
+          const msg = error.message?.toLowerCase() || ''
+          if (msg.includes('rate') || msg.includes('too many')) {
+            toast.error('Too many signup attempts. Please wait a few minutes and try again.')
+          } else {
+            toast.error(error.message)
+          }
+          if (msg.includes('email') || msg.includes('password') || msg.includes('limit') || msg.includes('already')) {
+            setStep(0)
+          }
+          return
         }
-        if (msg.includes('email') || msg.includes('password') || msg.includes('limit') || msg.includes('already')) {
+        const uid = authData.user?.id
+        if (!uid) throw new Error('Signup failed — could not get user ID')
+        if ((authData.user?.identities?.length ?? 0) === 0) {
           setStep(0)
+          throw new Error('An account with this email already exists. Please log in instead.')
         }
-        return
-      }
-      const userId = authData.user?.id
-      if (!userId) throw new Error('Signup failed — could not get user ID')
-      // Supabase silently returns a fake user when the email already exists
-      // (identities array is empty). The fake UUID is not in auth.users → FK violation.
-      if ((authData.user?.identities?.length ?? 0) === 0) {
-        setStep(0)
-        throw new Error('An account with this email already exists. Please log in instead.')
+        userId = uid
       }
 
-      let photoUrl = ''
+      let photoUrl = isOAuthCompletion ? (user?.profile_photo_url || '') : ''
       let cnicFrontUrl = ''
       let cnicBackUrl = ''
       const certUrls: string[] = new Array(certificates.length)
 
-      // Parallelize all uploads
       const uploadTasks: Promise<any>[] = [
         uploadFile(cnicFront!, 'cnic').then(url => cnicFrontUrl = url),
         uploadFile(cnicBack!, 'cnic').then(url => cnicBackUrl = url)
       ]
 
-      if (photo) {
+      if (!isOAuthCompletion && photo) {
         const path = `${userId}_${Date.now()}.jpg`
         uploadTasks.push(
           supabase.storage.from('avatars').upload(path, photo).then(({ error }) => {
@@ -228,25 +252,32 @@ export default function WorkerSignup() {
         uploadTasks.push(uploadFile(cert, 'certificates').then(url => certUrls[index] = url))
       })
 
-      // Wait for all uploads to complete concurrently
       await Promise.all(uploadTasks)
 
       const rawPhone = phone.trim()
       const phoneForDb = rawPhone.startsWith('0') ? '+92' + rawPhone.slice(1) : rawPhone
-
       const cnicFormatted = formatCNICDisplay(cnic)
 
-      const { error: usersErr } = await supabase.rpc('handle_signup_user', {
-        p_id: userId,
-        p_name: name.trim(),
-        p_email: email.trim(),
-        p_phone: phoneForDb,
-        p_role: 'worker',
-        p_city: city,
-        p_profile_photo_url: photoUrl || null,
-        p_verified: false,
-      })
-      if (usersErr) throw usersErr
+      if (isOAuthCompletion) {
+        // Update existing user row (phone, city) and mark profile complete
+        const { error: updateErr } = await supabase
+          .from('users')
+          .update({ phone: phoneForDb, city, profile_complete: true })
+          .eq('id', userId)
+        if (updateErr) throw updateErr
+      } else {
+        const { error: usersErr } = await supabase.rpc('handle_signup_user', {
+          p_id: userId,
+          p_name: name.trim(),
+          p_email: email.trim(),
+          p_phone: phoneForDb,
+          p_role: 'worker',
+          p_city: city,
+          p_profile_photo_url: photoUrl || null,
+          p_verified: false,
+        })
+        if (usersErr) throw usersErr
+      }
 
       const { error: profileErr } = await supabase.rpc('handle_signup_worker_profile', {
         p_user_id: userId,
@@ -259,17 +290,22 @@ export default function WorkerSignup() {
       })
       if (profileErr) throw profileErr
 
-      const { error: completeErr } = await supabase.rpc('handle_complete_signup_profile', {
-        p_id: userId,
-        p_profile_complete: true,
-      })
-      if (completeErr) throw completeErr
-
-      setIsSubmitted(true)
+      if (!isOAuthCompletion) {
+        const { error: completeErr } = await supabase.rpc('handle_complete_signup_profile', {
+          p_id: userId,
+          p_profile_complete: true,
+        })
+        if (completeErr) throw completeErr
+        setIsSubmitted(true)
+      } else {
+        await refreshUser()
+        toast.success('Profile completed!')
+        nav('/worker/dashboard', { replace: true })
+      }
     } catch (err: any) {
       toast.error(err.message || 'Signup failed')
       const msg = err.message?.toLowerCase() || ''
-      if (msg.includes('email') || msg.includes('password') || msg.includes('limit') || msg.includes('already')) {
+      if (!isOAuthCompletion && (msg.includes('email') || msg.includes('password') || msg.includes('limit') || msg.includes('already'))) {
         setStep(0)
       }
     } finally {
@@ -322,76 +358,94 @@ export default function WorkerSignup() {
         {/* Step 0 — Personal */}
         {step === 0 && (
           <div className="space-y-4 animate-fade-in">
-            <div className="flex justify-center mb-2">
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-24 h-24 rounded-full bg-surface border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
-                  {photoPreview ? <img src={photoPreview} className="w-full h-full object-cover" /> : <IoCamera size={28} className="text-text-muted" />}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleCamera}
-                    className="px-4 py-2 bg-primary text-white text-xs rounded-lg flex items-center gap-1"
-                  >
-                    <IoCamera size={14} />
-                    Take Selfie
-                  </button>
-                  <label className="px-4 py-2 bg-gray-100 text-gray-700 text-xs rounded-lg flex items-center gap-1 cursor-pointer">
-                    <IoCloudUpload size={14} />
-                    Upload
-                    <input
-                      id="worker-photo-input"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handlePhoto}
-                    />
-                  </label>
+            {isOAuthCompletion ? (
+              /* Google OAuth completion — show read-only profile card */
+              <div className="flex items-center gap-3 bg-surface rounded-2xl px-4 py-3">
+                {photoPreview ? (
+                  <img src={photoPreview} className="w-12 h-12 rounded-full object-cover" />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-primary font-bold text-lg">{name?.[0]}</span>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">{name}</p>
+                  <p className="text-xs text-text-muted">{email}</p>
                 </div>
               </div>
-            </div>
-            <div>
-              <label className="text-sm text-text-secondary mb-1.5 block">Full Name *</label>
-              <input
-                placeholder="Enter your name"
-                value={name}
-                onChange={e => {
-                  // Only allow letters and spaces
-                  const cleaned = e.target.value.replace(/[^a-zA-Z\s]/g, '')
-                  setName(cleaned)
-                }}
-                maxLength={80}
-                autoComplete="name"
-              />
-            </div>
+            ) : (
+              /* Normal signup — photo upload + name/email/password */
+              <>
+                <div className="flex justify-center mb-2">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-24 h-24 rounded-full bg-surface border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
+                      {photoPreview ? <img src={photoPreview} className="w-full h-full object-cover" /> : <IoCamera size={28} className="text-text-muted" />}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCamera}
+                        className="px-4 py-2 bg-primary text-white text-xs rounded-lg flex items-center gap-1"
+                      >
+                        <IoCamera size={14} />
+                        Take Selfie
+                      </button>
+                      <label className="px-4 py-2 bg-gray-100 text-gray-700 text-xs rounded-lg flex items-center gap-1 cursor-pointer">
+                        <IoCloudUpload size={14} />
+                        Upload
+                        <input
+                          id="worker-photo-input"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handlePhoto}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm text-text-secondary mb-1.5 block">Full Name *</label>
+                  <input
+                    placeholder="Enter your name"
+                    value={name}
+                    onChange={e => {
+                      const cleaned = e.target.value.replace(/[^a-zA-Z\s]/g, '')
+                      setName(cleaned)
+                    }}
+                    maxLength={80}
+                    autoComplete="name"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-text-secondary mb-1.5 block">Email *</label>
+                  <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-sm text-text-secondary mb-1.5 block">Password *</label>
+                  <input
+                    type="password"
+                    placeholder="Create a password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                  <p className="text-[11px] text-text-muted mt-1 leading-snug">{PASSWORD_HINT}</p>
+                </div>
+              </>
+            )}
             <div>
               <label className="text-sm text-text-secondary mb-1.5 block">Phone Number *</label>
-              <input 
-                type="tel" 
-                placeholder="03001234567" 
-                value={phone} 
+              <input
+                type="tel"
+                placeholder="03001234567"
+                value={phone}
                 onChange={e => {
-                  // Only allow numbers
                   const cleaned = e.target.value.replace(/[^0-9]/g, '')
                   setPhone(cleaned)
                 }}
                 maxLength={11}
               />
-            </div>
-            <div>
-              <label className="text-sm text-text-secondary mb-1.5 block">Email *</label>
-              <input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-sm text-text-secondary mb-1.5 block">Password *</label>
-              <input
-                type="password"
-                placeholder="Create a password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                autoComplete="new-password"
-              />
-              <p className="text-[11px] text-text-muted mt-1 leading-snug">{PASSWORD_HINT}</p>
             </div>
           </div>
         )}

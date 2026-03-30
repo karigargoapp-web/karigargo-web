@@ -61,7 +61,7 @@ function roleHome(role: string) {
 
 function completionRoute(role: string) {
   if (role === 'customer') return '/complete-profile/customer'
-  if (role === 'worker') return '/complete-profile/worker'
+  if (role === 'worker') return '/signup/worker'
   return '/login'
 }
 
@@ -111,8 +111,10 @@ export function AppRouter() {
           <Route path="/login" element={<Login />} />
           <Route path="/login/worker" element={<WorkerLogin />} />
           <Route path="/signup/customer" element={<CustomerSignup />} />
-          <Route path="/signup/worker" element={<WorkerSignup />} />
         </Route>
+
+        {/* Worker signup — accessible to unauthenticated users AND workers with profile_complete=false */}
+        <Route path="/signup/worker" element={<WorkerSignup />} />
 
         {/* Email confirmation - accessible without auth check */}
         <Route path="/email-confirmed" element={<EmailConfirmed />} />

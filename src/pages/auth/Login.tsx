@@ -18,6 +18,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [showResend, setShowResend] = useState(false)
   const [resendLoading, setResendLoading] = useState(false)
 
@@ -69,11 +70,31 @@ export default function Login() {
   }
 
   const handleGoogle = async () => {
+    setGoogleLoading(true)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: emailRedirect('/customer/home') },
     })
-    if (error) toast.error(error.message)
+    if (error) { toast.error(error.message); setGoogleLoading(false) }
+  }
+
+  if (googleLoading) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <div className="bg-primary px-6 pt-12 pb-8 rounded-b-3xl text-center">
+          <div className="w-16 h-16 mx-auto mb-2 rounded-2xl bg-white/20 animate-pulse" />
+          <div className="h-3 w-48 mx-auto bg-white/20 rounded animate-pulse mt-2" />
+          <div className="flex gap-3 mt-6">
+            <div className="flex-1 bg-white/10 rounded-2xl py-3.5 px-3 h-14 animate-pulse" />
+            <div className="flex-1 bg-white/10 rounded-2xl py-3.5 px-3 h-14 animate-pulse" />
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-medium text-text-secondary">Connecting to Google...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -184,9 +205,9 @@ export default function Login() {
               <div className="flex-1 h-px bg-border" />
             </div>
 
-            <button onClick={handleGoogle} className="btn-ghost flex items-center justify-center gap-3">
-              <IoLogoGoogle size={18} className="text-[#4285F4]" />
-              {t('signInWithGoogle')}
+            <button onClick={handleGoogle} disabled={googleLoading} className="btn-ghost flex items-center justify-center gap-3">
+              {googleLoading ? <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <IoLogoGoogle size={18} className="text-[#4285F4]" />}
+              {googleLoading ? 'Redirecting...' : t('signInWithGoogle')}
             </button>
           </div>
         ) : (
@@ -199,9 +220,9 @@ export default function Login() {
               <span className="text-xs text-text-muted">{t('or')}</span>
               <div className="flex-1 h-px bg-border" />
             </div>
-            <button onClick={handleGoogle} className="btn-ghost flex items-center justify-center gap-3">
-              <IoLogoGoogle size={18} className="text-[#4285F4]" />
-              {t('signUpWithGoogle')}
+            <button onClick={handleGoogle} disabled={googleLoading} className="btn-ghost flex items-center justify-center gap-3">
+              {googleLoading ? <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <IoLogoGoogle size={18} className="text-[#4285F4]" />}
+              {googleLoading ? 'Redirecting...' : t('signUpWithGoogle')}
             </button>
           </div>
         )}
