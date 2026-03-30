@@ -11,6 +11,7 @@ const translations = {
     // Auth
     login: 'Login',
     signup: 'Sign Up',
+    tagline: 'Har Kaam Ka Karigar, Bas Ek Tap Dur',
     email: 'Email',
     password: 'Password',
     phone: 'Phone Number',
