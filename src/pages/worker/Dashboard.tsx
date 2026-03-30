@@ -23,8 +23,8 @@ export default function WorkerDashboard() {
     const loadAll = async () => {
       const [jobsRes, profileRes, activeRes, completedRes] = await Promise.all([
         supabase.from('jobs').select('*').eq('status', 'pending').order('created_at', { ascending: false }),
-        supabase.from('worker_profiles').select('*').eq('user_id', user.id).single(),
-        supabase.from('jobs').select('*').eq('worker_id', user.id).neq('status', 'completed').neq('status', 'cancelled').limit(1).single(),
+        supabase.from('worker_profiles').select('*').eq('user_id', user.id).maybeSingle(),
+        supabase.from('jobs').select('*').eq('worker_id', user.id).neq('status', 'completed').neq('status', 'cancelled').limit(1).maybeSingle(),
         supabase.from('jobs').select('inspection_charges,work_cost,platform_fee').eq('worker_id', user.id).eq('status', 'completed'),
       ])
       if (jobsRes.data) setJobs(jobsRes.data as Job[])
@@ -40,6 +40,44 @@ export default function WorkerDashboard() {
       setLoading(false)
     }
     loadAll()
+
+    // Real-time: new pending jobs appear instantly; stale jobs drop off when status changes
+    const channel = supabase
+      .channel('worker-jobs-feed')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'jobs', filter: 'status=eq.pending' },
+        (payload) => {
+          setJobs(prev => {
+            if (prev.some(j => j.id === payload.new.id)) return prev
+            return [payload.new as Job, ...prev]
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'jobs' },
+        (payload) => {
+          const updated = payload.new as Job
+          if (updated.status !== 'pending') {
+            // Remove from available list if no longer pending
+            setJobs(prev => prev.filter(j => j.id !== updated.id))
+          } else {
+            // Update in place if still pending
+            setJobs(prev => prev.map(j => j.id === updated.id ? updated : j))
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'jobs' },
+        (payload) => {
+          setJobs(prev => prev.filter(j => j.id !== payload.old.id))
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [user])
 
   const filtered = filter ? jobs.filter(j => j.category === filter) : jobs
