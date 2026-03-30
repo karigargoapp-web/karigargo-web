@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoArrowBack, IoCamera, IoCheckmarkCircle, IoCloudUpload, IoLogoGoogle, IoClose } from 'react-icons/io5'
+import { IoArrowBack, IoCamera, IoCheckmarkCircle, IoCloudUpload, IoLogoGoogle, IoClose, IoLanguage } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
 import { SERVICE_CATEGORIES, PAKISTAN_CITIES } from '../../types'
@@ -16,12 +16,14 @@ import {
   validatePersonName,
   validateWorkerBio,
 } from '../../lib/validation'
+import { useI18n } from '../../lib/i18n'
 import toast from 'react-hot-toast'
 
 const STEPS = ['Personal Info', 'Skills & City', 'Documents', 'Bio']
 
 export default function WorkerSignup() {
   const nav = useNavigate()
+  const { language, setLanguage } = useI18n()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -493,6 +495,15 @@ export default function WorkerSignup() {
           )}
         </div>
       </div>
+
+      {/* Language Toggle - Bottom Right */}
+      <button
+        onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
+        className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-2 bg-white/90 rounded-lg shadow-sm text-sm text-text-primary z-10"
+      >
+        <IoLanguage size={16} className="text-primary" />
+        <span>{language === 'ur' ? 'اردو' : 'EN'}</span>
+      </button>
 
       {/* Camera Preview Modal */}
       {showCamera && (

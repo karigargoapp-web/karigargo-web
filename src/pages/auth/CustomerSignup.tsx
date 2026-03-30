@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoArrowBack, IoCamera, IoLogoGoogle, IoCheckmarkCircle, IoCloudUpload, IoClose } from 'react-icons/io5'
+import { IoArrowBack, IoCamera, IoLogoGoogle, IoCheckmarkCircle, IoCloudUpload, IoClose, IoLanguage } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
 import { PAKISTAN_CITIES } from '../../types'
@@ -13,10 +13,12 @@ import {
   validatePassword,
   validatePersonName,
 } from '../../lib/validation'
+import { useI18n } from '../../lib/i18n'
 import toast from 'react-hot-toast'
 
 export default function CustomerSignup() {
   const nav = useNavigate()
+  const { language, setLanguage } = useI18n()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -421,6 +423,15 @@ export default function CustomerSignup() {
           </button>
         </p>
       </div>
+
+      {/* Language Toggle - Bottom Right */}
+      <button
+        onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
+        className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-2 bg-white/90 rounded-lg shadow-sm text-sm text-text-primary z-10"
+      >
+        <IoLanguage size={16} className="text-primary" />
+        <span>{language === 'ur' ? 'اردو' : 'EN'}</span>
+      </button>
 
       {/* Camera Preview Modal */}
       {showCamera && (

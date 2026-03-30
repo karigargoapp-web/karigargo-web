@@ -30,6 +30,8 @@ const translations = {
     worker: 'Worker',
     customerRegistration: 'Customer Registration',
     workerRegistration: 'Worker Registration',
+    hireWorkers: 'Hire Workers',
+    findJobs: 'Find Jobs',
     uploadPhoto: 'Upload Photo',
     takeSelfie: 'Take Selfie',
     
@@ -129,6 +131,8 @@ const translations = {
     worker: 'کارکن',
     customerRegistration: 'کسٹمر رجسٹریشن',
     workerRegistration: 'کارکن رجسٹریشن',
+    hireWorkers: 'کارکن کرائیں',
+    findJobs: 'کام تلاش کریں',
     uploadPhoto: 'تصویر اپ لوڈ کریں',
     takeSelfie: 'سیلفی لیں',
     

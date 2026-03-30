@@ -12,7 +12,7 @@ type AuthTab = 'login' | 'signup'
 
 export default function Login() {
   const nav = useNavigate()
-  const { t, language } = useI18n()
+  const { t, language, setLanguage } = useI18n()
   const [activeTab, setActiveTab] = useState<AuthTab>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -76,7 +76,14 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <div className="bg-primary px-6 pt-12 pb-8 rounded-b-3xl text-center">
+      <div className="bg-primary px-6 pt-12 pb-8 rounded-b-3xl text-center relative">
+        <button
+          onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
+          className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1.5 bg-white/20 rounded-lg text-xs text-white"
+        >
+          <IoLanguage size={14} />
+          <span>{language === 'ur' ? 'اردو' : 'EN'}</span>
+        </button>
         <img src="/logo.png" alt="KarigarGo" className="w-16 h-16 mx-auto mb-2 rounded-2xl" />
         <p className="text-white/80 text-sm mt-1">Har Kaam Ka Karigar, Bas Ek Tap Dur</p>
         <div className="flex gap-3 mt-6">
@@ -113,12 +120,12 @@ export default function Login() {
         {activeTab === 'login' ? (
           <div className="space-y-4 animate-fade-in">
             <div>
-              <label className="text-sm font-medium text-text-primary mb-1.5 block">Email</label>
+              <label className="text-sm font-medium text-text-primary mb-1.5 block">{t('email')}</label>
               <div className="relative">
                 <IoMail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('email')}
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="!pl-10"
@@ -127,12 +134,12 @@ export default function Login() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-text-primary mb-1.5 block">Password</label>
+              <label className="text-sm font-medium text-text-primary mb-1.5 block">{t('password')}</label>
               <div className="relative">
                 <IoLockClosed size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter password"
+                  placeholder={t('password')}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="!pl-10 !pr-10"
@@ -147,9 +154,9 @@ export default function Login() {
                 </button>
               </div>
             </div>
-            <p className="text-sm text-primary font-medium text-right cursor-pointer">Forgot Password?</p>
+            <p className="text-sm text-primary font-medium text-right cursor-pointer">{t('forgotPassword')}</p>
             <button onClick={handleEmailLogin} disabled={loading} className="btn-primary">
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? t('loading') : t('login')}
             </button>
 
             {showResend && (
@@ -171,24 +178,23 @@ export default function Login() {
 
             <div className="flex items-center gap-3 my-2">
               <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-text-muted">or</span>
+              <span className="text-xs text-text-muted">{t('or')}</span>
               <div className="flex-1 h-px bg-border" />
             </div>
 
             <button onClick={handleGoogle} className="btn-ghost flex items-center justify-center gap-3">
               <IoLogoGoogle size={18} className="text-[#4285F4]" />
-              Sign in with Google
+              {t('signInWithGoogle')}
             </button>
           </div>
         ) : (
           <div className="space-y-4 animate-fade-in text-center py-6">
-            <p className="text-text-secondary text-sm mb-6">{t('createAccountToGetStarted')}</p>
             <button onClick={() => nav('/signup/customer')} className="btn-primary">
               {t('customerRegistration')}
             </button>
             <div className="flex items-center gap-3 my-4">
               <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-text-muted">or</span>
+              <span className="text-xs text-text-muted">{t('or')}</span>
               <div className="flex-1 h-px bg-border" />
             </div>
             <button onClick={handleGoogle} className="btn-ghost flex items-center justify-center gap-3">
@@ -198,15 +204,6 @@ export default function Login() {
           </div>
         )}
       </div>
-
-      {/* Language Toggle - Bottom Right */}
-      <button
-        onClick={() => nav('/language')}
-        className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-2 bg-white/90 rounded-lg shadow-sm text-sm text-text-primary"
-      >
-        <IoLanguage size={16} className="text-primary" />
-        <span>{language === 'ur' ? t('urdu') : t('english')}</span>
-      </button>
     </div>
   )
 }

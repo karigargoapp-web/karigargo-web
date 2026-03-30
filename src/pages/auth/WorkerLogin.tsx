@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoLogoGoogle, IoMail, IoLockClosed, IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5'
+import { IoLogoGoogle, IoMail, IoLockClosed, IoLanguage, IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
 import { assertEmailConfirmed, assertPortalRole } from '../../lib/authRole'
 import { validateEmail } from '../../lib/validation'
+import { useI18n } from '../../lib/i18n'
 import toast from 'react-hot-toast'
 
 type AuthTab = 'login' | 'signup'
 
 export default function WorkerLogin() {
   const nav = useNavigate()
+  const { language, setLanguage, t } = useI18n()
   const [activeTab, setActiveTab] = useState<AuthTab>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -77,7 +79,14 @@ export default function WorkerLogin() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <div className="bg-primary px-6 pt-12 pb-8 rounded-b-3xl text-center">
+      <div className="bg-primary px-6 pt-12 pb-8 rounded-b-3xl text-center relative">
+        <button
+          onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')}
+          className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1.5 bg-white/20 rounded-lg text-xs text-white"
+        >
+          <IoLanguage size={14} />
+          <span>{language === 'ur' ? 'اردو' : 'EN'}</span>
+        </button>
         <img src="/logo.png" alt="KarigarGo" className="w-16 h-16 mx-auto mb-2 rounded-2xl" />
         <p className="text-white/80 text-sm mt-1">Agla Kaam, Bas Ek Tap Dur</p>
         <div className="flex gap-3 mt-6">
@@ -85,12 +94,12 @@ export default function WorkerLogin() {
             onClick={() => nav('/login')}
             className="flex-1 bg-white/5 border border-white/10 rounded-2xl py-3.5 px-3 text-left hover:bg-white/10 transition"
           >
-            <p className="text-white/60 font-medium text-sm">Customer</p>
-            <p className="text-white/40 text-xs mt-0.5">Hire workers</p>
+            <p className="text-white/60 font-medium text-sm">{t('customer')}</p>
+            <p className="text-white/40 text-xs mt-0.5">{t('hireWorkers')}</p>
           </button>
           <div className="flex-1 bg-white/15 border border-white/30 rounded-2xl py-3.5 px-3">
-            <p className="text-white font-semibold text-sm">Worker</p>
-            <p className="text-white/60 text-xs mt-0.5">Find jobs</p>
+            <p className="text-white font-semibold text-sm">{t('worker')}</p>
+            <p className="text-white/60 text-xs mt-0.5">{t('findJobs')}</p>
           </div>
         </div>
       </div>
@@ -101,25 +110,25 @@ export default function WorkerLogin() {
             onClick={() => setActiveTab('login')}
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition ${activeTab === 'login' ? 'bg-white shadow-sm text-primary' : 'text-text-muted'}`}
           >
-            Login
+            {t('login')}
           </button>
           <button
             onClick={() => setActiveTab('signup')}
             className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition ${activeTab === 'signup' ? 'bg-white shadow-sm text-primary' : 'text-text-muted'}`}
           >
-            Sign Up
+            {t('signup')}
           </button>
         </div>
 
         {activeTab === 'login' ? (
           <div className="space-y-4 animate-fade-in">
             <div>
-              <label className="text-sm font-medium text-text-primary mb-1.5 block">Email</label>
+              <label className="text-sm font-medium text-text-primary mb-1.5 block">{t('email')}</label>
               <div className="relative">
                 <IoMail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('email')}
                   value={email}
                   onChange={e => {
                     setEmail(e.target.value)
@@ -131,12 +140,12 @@ export default function WorkerLogin() {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-text-primary mb-1.5 block">Password</label>
+              <label className="text-sm font-medium text-text-primary mb-1.5 block">{t('password')}</label>
               <div className="relative">
                 <IoLockClosed size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter password"
+                  placeholder={t('password')}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="!pl-10 !pr-10"
@@ -151,9 +160,9 @@ export default function WorkerLogin() {
                 </button>
               </div>
             </div>
-            <p className="text-sm text-primary font-medium text-right cursor-pointer">Forgot Password?</p>
+            <p className="text-sm text-primary font-medium text-right cursor-pointer">{t('forgotPassword')}</p>
             <button onClick={handleLogin} disabled={loading} className="btn-primary">
-              {loading ? 'Signing in...' : 'Login'}
+              {loading ? t('loading') : t('login')}
             </button>
 
             {showResend && (
@@ -181,32 +190,23 @@ export default function WorkerLogin() {
 
             <button onClick={handleGoogle} className="btn-ghost flex items-center justify-center gap-3">
               <IoLogoGoogle size={18} className="text-[#4285F4]" />
-              Sign in with Google
+              {t('signInWithGoogle')}
             </button>
           </div>
         ) : (
           <div className="space-y-4 animate-fade-in text-center py-6">
-            <p className="text-text-secondary text-sm mb-6">
-              Create your worker account to start getting jobs
-            </p>
             <button onClick={() => nav('/signup/worker')} className="btn-primary">
-              Worker Registration
+              {t('workerRegistration')}
             </button>
             <div className="flex items-center gap-3 my-4">
               <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-text-muted">or</span>
+              <span className="text-xs text-text-muted">{t('or')}</span>
               <div className="flex-1 h-px bg-border" />
             </div>
             <button onClick={handleGoogle} className="btn-ghost flex items-center justify-center gap-3">
               <IoLogoGoogle size={18} className="text-[#4285F4]" />
-              Sign up with Google
+              {t('signUpWithGoogle')}
             </button>
-            <p className="text-xs text-text-muted pt-2">
-              Are you a customer?{' '}
-              <button onClick={() => nav('/signup/customer')} className="text-primary font-medium">
-                Register here
-              </button>
-            </p>
           </div>
         )}
       </div>
