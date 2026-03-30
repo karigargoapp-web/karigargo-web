@@ -34,32 +34,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supaUser.app_metadata?.provider === 'google' ||
         supaUser.identities?.some(i => i.provider === 'google')
 
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', supaUser.id)
-        .single()
-
-      if (data) {
-        if (!data.verified && (emailConfirmed || isGoogleUser)) {
-          await supabase.from('users').update({ verified: true }).eq('id', supaUser.id)
-          data.verified = true
-        }
-        setUser(data as AppUser)
-        return
-      }
-
-      if (!isGoogleUser) return
+      // Extract Google photo early — needed for both new and existing users
+      const googleIdentity = supaUser.identities?.find(i => i.provider === 'google')
+      const photo =
+        supaUser.user_metadata?.avatar_url ||
+        supaUser.user_metadata?.picture ||
+        (googleIdentity?.identity_data as any)?.avatar_url ||
+        (googleIdentity?.identity_data as any)?.picture ||
+        null
 
       const name =
         supaUser.user_metadata?.full_name ||
         supaUser.user_metadata?.name ||
         supaUser.email?.split('@')[0] ||
         'User'
-      const photo =
-        supaUser.user_metadata?.avatar_url ||
-        supaUser.user_metadata?.picture ||
-        null
+
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', supaUser.id)
+        .maybeSingle()
+
+      if (data) {
+        const updates: Record<string, unknown> = {}
+        if (!data.verified && (emailConfirmed || isGoogleUser)) {
+          updates.verified = true
+          data.verified = true
+        }
+        // Backfill photo if row exists but photo was never saved
+        if (!data.profile_photo_url && photo) {
+          updates.profile_photo_url = photo
+          data.profile_photo_url = photo
+        }
+        if (Object.keys(updates).length > 0) {
+          await supabase.from('users').update(updates).eq('id', supaUser.id)
+        }
+        setUser(data as AppUser)
+        return
+      }
+
+      if (!isGoogleUser) return
       const intendedRole = localStorage.getItem('oauth-intended-role')
       localStorage.removeItem('oauth-intended-role')
       const role: UserRole = intendedRole === 'worker' ? 'worker' : 'customer'
@@ -91,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('users')
         .select('*')
         .eq('id', supaUser.id)
-        .single()
+        .maybeSingle()
       if (newData) setUser(newData as AppUser)
     } catch {
       console.error('[KarigarGo] Failed to fetch/create user profile')
@@ -99,21 +113,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (session?.user) fetchUserProfile(session.user)
-      setLoading(false)
-    })
-
+    // onAuthStateChange fires INITIAL_SESSION on mount (Supabase v2), which covers
+    // both normal load and OAuth callback (hash token). We await fetchUserProfile
+    // before clearing loading so no route guard ever sees loading=false with user=null.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       if (session?.user) {
-        fetchUserProfile(session.user)
+        await fetchUserProfile(session.user)
       } else {
         setUser(null)
       }
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()

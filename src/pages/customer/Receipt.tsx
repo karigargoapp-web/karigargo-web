@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { IoArrowBack, IoShareSocial, IoHome, IoCash, IoCard, IoDownload } from 'react-icons/io5'
+import { jsPDF } from 'jspdf'
 import { supabase } from '../../lib/supabase'
 import type { Job } from '../../types'
 
@@ -26,6 +27,102 @@ export default function CustomerReceipt() {
   const platformFee = job.platform_fee || Math.round(total * 0.1)
   const grandTotal = total + platformFee
   const netToWorker = total - platformFee
+
+  const handleDownloadPdf = () => {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const pageW = doc.internal.pageSize.getWidth()
+    const margin = 20
+    const contentW = pageW - margin * 2
+    let y = 20
+
+    // Header bar
+    doc.setFillColor(34, 139, 87)
+    doc.rect(0, 0, pageW, 38, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(20)
+    doc.setFont('helvetica', 'bold')
+    doc.text('KarigarGo', margin, 16)
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.text('Payment Receipt', margin, 24)
+    doc.setFontSize(9)
+    doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 31)
+    y = 50
+
+    // Receipt ID
+    doc.setTextColor(100, 100, 100)
+    doc.setFontSize(8)
+    doc.text(`Receipt ID: ${job.id}`, margin, y)
+    y += 10
+
+    // Section: Job Details
+    const drawSection = (title: string) => {
+      doc.setFillColor(245, 245, 245)
+      doc.rect(margin, y, contentW, 8, 'F')
+      doc.setTextColor(34, 139, 87)
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.text(title, margin + 3, y + 5.5)
+      y += 12
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(50, 50, 50)
+    }
+
+    const drawRow = (label: string, value: string, bold = false) => {
+      doc.setFontSize(9)
+      doc.setFont('helvetica', bold ? 'bold' : 'normal')
+      doc.setTextColor(100, 100, 100)
+      doc.text(label, margin + 2, y)
+      doc.setTextColor(30, 30, 30)
+      doc.text(value, pageW - margin - 2, y, { align: 'right' })
+      y += 7
+    }
+
+    const drawDivider = () => {
+      doc.setDrawColor(220, 220, 220)
+      doc.line(margin, y, pageW - margin, y)
+      y += 5
+    }
+
+    drawSection('Job Details')
+    drawRow('Service', job.title)
+    drawRow('Category', job.category)
+    drawRow('Worker', job.worker_name || '—')
+    drawRow('Customer', job.customer_name || '—')
+    drawRow('Date', new Date(job.completed_at || job.updated_at).toLocaleDateString())
+    drawRow('Location', job.location)
+    y += 3
+
+    drawSection('Payment Breakdown')
+    drawRow('Inspection Charges', `PKR ${inspectionFee.toLocaleString()}`)
+    if (isCaseA) drawRow('Work Cost', `PKR ${workCost.toLocaleString()}`)
+    drawRow('Subtotal', `PKR ${total.toLocaleString()}`)
+    drawRow('Platform Fee (10%)', `PKR ${platformFee.toLocaleString()}`)
+    drawDivider()
+    drawRow('Total Amount', `PKR ${grandTotal.toLocaleString()}`, true)
+    drawRow('Amount to Worker', `PKR ${netToWorker.toLocaleString()}`)
+    y += 5
+
+    // Case badge
+    doc.setFillColor(isCaseA ? 220 : 254, isCaseA ? 252 : 249, isCaseA ? 231 : 195)
+    doc.roundedRect(margin, y, contentW, 10, 2, 2, 'F')
+    doc.setTextColor(isCaseA ? 133 : 161, isCaseA ? 100 : 98, isCaseA ? 0 : 0)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text(isCaseA ? 'Case A — Full Payment' : 'Case B — Inspection Only', pageW / 2, y + 6.5, { align: 'center' })
+    y += 18
+
+    // Footer
+    doc.setDrawColor(200, 200, 200)
+    doc.line(margin, y, pageW - margin, y)
+    y += 6
+    doc.setTextColor(150, 150, 150)
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'normal')
+    doc.text('Thank you for using KarigarGo. This is a computer-generated receipt.', pageW / 2, y, { align: 'center' })
+
+    doc.save(`KarigarGo_Receipt_${job.id.slice(0, 8)}.pdf`)
+  }
 
   const handleShare = () => {
     if (navigator.share) {
@@ -132,7 +229,7 @@ export default function CustomerReceipt() {
         </div>
 
         {/* Actions */}
-        <button onClick={handleShare} className="w-full flex items-center justify-center gap-2 border border-border bg-white text-text-primary py-3.5 rounded-2xl text-sm font-medium shadow-sm">
+        <button onClick={handleDownloadPdf} className="w-full flex items-center justify-center gap-2 border border-border bg-white text-text-primary py-3.5 rounded-2xl text-sm font-medium shadow-sm">
           <IoDownload size={16} /> Download Receipt
         </button>
         <button onClick={handleShare} className="w-full flex items-center justify-center gap-2 border border-border bg-white text-text-primary py-3.5 rounded-2xl text-sm font-medium shadow-sm">

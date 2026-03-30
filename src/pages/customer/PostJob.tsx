@@ -151,32 +151,34 @@ export default function PostJob() {
     setLoading(true)
 
     try {
-      const uploadedUrls: string[] = []
-      for (const item of mediaItems) {
+      const ts = Date.now()
+
+      // Parallelize all media uploads
+      const mediaUploadTasks = mediaItems.map(async (item, i) => {
         const ext = item.type === 'video' ? 'mp4' : 'jpg'
         const prefix = item.type === 'video' ? 'video' : 'img'
-        const path = `jobs/${prefix}_${user.id}_${Date.now()}_${uploadedUrls.length}.${ext}`
+        const path = `jobs/${prefix}_${user.id}_${ts}_${i}.${ext}`
         const { error: upErr } = await supabase.storage
           .from('job-images')
           .upload(path, item.file)
-        if (upErr) {
-          toast.error(`Failed to upload: ${upErr.message}`)
-          continue
-        }
-        const { data } = supabase.storage.from('job-images').getPublicUrl(path)
-        uploadedUrls.push(data.publicUrl)
-      }
+        if (upErr) throw new Error(`Upload failed: ${upErr.message}`)
+        return supabase.storage.from('job-images').getPublicUrl(path).data.publicUrl
+      })
 
-      let voiceNoteUrl = ''
-      if (voiceBlob) {
-        const voiceFile = new File([voiceBlob], `voice_${Date.now()}.webm`, {
-          type: 'audio/webm',
-        })
-        const path = `voices/${user.id}_${Date.now()}.webm`
-        await supabase.storage.from('job-images').upload(path, voiceFile)
-        const { data } = supabase.storage.from('job-images').getPublicUrl(path)
-        voiceNoteUrl = data.publicUrl
-      }
+      // Parallelize voice upload alongside media
+      const voiceUploadTask = voiceBlob
+        ? (async () => {
+            const voiceFile = new File([voiceBlob], `voice_${ts}.webm`, { type: 'audio/webm' })
+            const path = `voices/${user.id}_${ts}.webm`
+            await supabase.storage.from('job-images').upload(path, voiceFile)
+            return supabase.storage.from('job-images').getPublicUrl(path).data.publicUrl
+          })()
+        : Promise.resolve('')
+
+      const [uploadedUrls, voiceNoteUrl] = await Promise.all([
+        Promise.all(mediaUploadTasks),
+        voiceUploadTask,
+      ])
 
       let imageUrlValue: string | null = null
       if (uploadedUrls.length === 1) imageUrlValue = uploadedUrls[0]

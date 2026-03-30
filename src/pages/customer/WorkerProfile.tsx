@@ -9,24 +9,27 @@ export default function ViewWorkerProfile() {
   const { workerId } = useParams()
   const [worker, setWorker] = useState<User | null>(null)
   const [profile, setProfile] = useState<WorkerProfile | null>(null)
-  const [reviews, setReviews] = useState<Review[]>([])
+  const [reviews, setReviews] = useState<Review[]>([])  
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!workerId) return
     const fetch = async () => {
       const [u, p, r] = await Promise.all([
-        supabase.from('users').select('*').eq('id', workerId).single(),
-        supabase.from('worker_profiles').select('*').eq('user_id', workerId).single(),
+        supabase.from('users').select('*').eq('id', workerId).maybeSingle(),
+        supabase.from('worker_profiles').select('*').eq('user_id', workerId).maybeSingle(),
         supabase.from('reviews').select('*').eq('worker_id', workerId).order('created_at', { ascending: false }),
       ])
       if (u.data) setWorker(u.data as User)
       if (p.data) setProfile(p.data as WorkerProfile)
       if (r.data) setReviews(r.data as Review[])
+      setLoading(false)
     }
     fetch()
   }, [workerId])
 
-  if (!worker) return <div className="min-h-screen flex items-center justify-center bg-surface text-sm text-text-muted">Loading...</div>
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-surface text-sm text-text-muted">Loading...</div>
+  if (!worker) return <div className="min-h-screen flex items-center justify-center bg-surface text-sm text-text-muted">Worker not found</div>
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">

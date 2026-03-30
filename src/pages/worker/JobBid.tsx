@@ -59,42 +59,54 @@ export default function JobBid() {
     if (!user || !job) return
     setLoading(true)
 
-    /* Capture worker's current GPS — non-blocking; bid still submits without it */
-    let workerLat: number | null = null
-    let workerLng: number | null = null
     try {
-      const pos = await new Promise<GeolocationPosition>((res, rej) =>
-        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 6000, enableHighAccuracy: true })
-      )
-      workerLat = pos.coords.latitude
-      workerLng = pos.coords.longitude
-    } catch { /* location permission denied — continue */ }
+      /* Capture worker's current GPS — hard 5 s wall-clock limit covers the
+         permission prompt too (browser's own `timeout` only starts after grant) */
+      let workerLat: number | null = null
+      let workerLng: number | null = null
+      try {
+        const gps = new Promise<GeolocationPosition>((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, {
+            timeout: 5000,
+            enableHighAccuracy: true,
+            maximumAge: 0,
+          })
+        )
+        const wall = new Promise<never>((_, rej) =>
+          setTimeout(() => rej(new Error('gps-wall')), 5000)
+        )
+        const pos = await Promise.race([gps, wall])
+        workerLat = pos.coords.latitude
+        workerLng = pos.coords.longitude
+      } catch { /* denied or timed out — bid still proceeds */ }
 
-    const { data: wp } = await supabase
-      .from('worker_profiles').select('avg_rating, skills')
-      .eq('user_id', user.id).single()
+      const { data: wp } = await supabase
+        .from('worker_profiles').select('avg_rating, skills')
+        .eq('user_id', user.id).maybeSingle()
 
-    const { error } = await supabase.from('bids').insert({
-      job_id: job.id,
-      worker_id: user.id,
-      worker_name: user.name,
-      worker_photo: user.profile_photo_url || null,
-      skill: wp?.skills?.[0] || job.category,
-      inspection_charges: chargeNum,
-      message: message.trim() || null,
-      rating: wp?.avg_rating || 0,
-      verified: user.verified,
-      status: 'pending',
-      worker_lat: workerLat,
-      worker_lng: workerLng,
-    })
+      const { error } = await supabase.from('bids').insert({
+        job_id: job.id,
+        worker_id: user.id,
+        worker_name: user.name,
+        worker_photo: user.profile_photo_url || null,
+        skill: wp?.skills?.[0] || job.category,
+        inspection_charges: chargeNum,
+        message: message.trim() || null,
+        rating: wp?.avg_rating || 0,
+        verified: user.verified,
+        status: 'pending',
+        worker_lat: workerLat,
+        worker_lng: workerLng,
+      })
 
-    /* Live tracking to customer only starts after bid is accepted (bidAccepted phase) — not here */
-
-    setLoading(false)
-    if (error) return toast.error(error.message)
-    toast.success('Bid submitted!')
-    nav('/worker/my-bids')
+      if (error) { toast.error(error.message); return }
+      toast.success('Bid submitted!')
+      nav('/worker/my-bids')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit bid')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (!job) return (

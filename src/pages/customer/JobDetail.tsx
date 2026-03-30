@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { IoArrowBack, IoStar, IoCheckmarkCircle, IoLocation, IoCalendar, IoChatbubble, IoCash, IoTime, IoNavigate } from 'react-icons/io5'
+import { MapContainer, TileLayer, Marker } from 'react-leaflet'
+import L from 'leaflet'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import type { Job, Bid } from '../../types'
 import { parseMediaUrls, isVideoUrl } from '../../utils/media'
+
+const workerBidIcon = L.divIcon({
+  className: '',
+  html: `<div style="width:36px;height:36px;background:linear-gradient(135deg,#1a73e8,#0d47a1);border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(26,115,232,0.5);font-size:16px;">🔧</div>`,
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
+})
 
 const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
   const R = 6371
@@ -207,23 +216,32 @@ export default function JobDetail() {
                 )}
 
                 {bid.worker_lat && bid.worker_lng && (
-                  <div className="mt-3 bg-blue-50 rounded-xl p-3 border border-blue-100">
+                  <div className="mt-3 space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
-                          <IoLocation size={16} className="text-white" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-text-primary">Worker's Location</p>
-                          <p className="text-[10px] text-text-muted">Last known position</p>
-                        </div>
-                      </div>
+                      <p className="text-xs font-medium text-text-primary flex items-center gap-1">
+                        <IoLocation size={13} className="text-blue-500" /> Worker's Location at Bid Time
+                      </p>
                       <button
                         onClick={() => window.open(`https://www.google.com/maps?q=${bid.worker_lat},${bid.worker_lng}`, '_blank')}
                         className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-500 text-white text-[11px] font-medium rounded-lg"
                       >
-                        <IoNavigate size={12} /> Open Map
+                        <IoNavigate size={12} /> Open in Google Maps
                       </button>
+                    </div>
+                    <div className="rounded-xl overflow-hidden border border-border" style={{ height: 180 }}>
+                      <MapContainer
+                        center={[bid.worker_lat, bid.worker_lng]}
+                        zoom={14}
+                        style={{ height: '100%', width: '100%' }}
+                        zoomControl={false}
+                        dragging={false}
+                        scrollWheelZoom={false}
+                        doubleClickZoom={false}
+                        attributionControl={false}
+                      >
+                        <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+                        <Marker position={[bid.worker_lat, bid.worker_lng]} icon={workerBidIcon} />
+                      </MapContainer>
                     </div>
                   </div>
                 )}
