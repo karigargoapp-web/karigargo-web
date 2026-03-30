@@ -106,6 +106,7 @@ export default function CustomerSignup() {
 
   const handleSubmit = async () => {
     const fieldErr =
+      (!photo ? 'Please upload a profile photo' : null) ||
       validatePersonName(name) ||
       validateEmail(email) ||
       validatePassword(password) ||
@@ -115,10 +116,8 @@ export default function CustomerSignup() {
       validateImageFile(cnicFront, { required: true }) ||
       validateImageFile(cnicBack, { required: true })
     if (fieldErr) return toast.error(fieldErr)
-    if (photo) {
-      const pe = validateImageFile(photo, { required: false })
-      if (pe) return toast.error(pe)
-    }
+    const pe = validateImageFile(photo!, { required: false })
+    if (pe) return toast.error(pe)
     if (submitLockRef.current) return
     submitLockRef.current = true
     setLoading(true)
@@ -143,6 +142,12 @@ export default function CustomerSignup() {
       const userId = authData.user?.id ?? null
       if (!userId) {
         toast.error('Signup failed — could not get user ID')
+        return
+      }
+      // Supabase silently returns a fake user when the email already exists
+      // (identities array is empty). The fake UUID is not in auth.users → FK violation.
+      if ((authData.user?.identities?.length ?? 0) === 0) {
+        toast.error('An account with this email already exists. Please log in instead.')
         return
       }
 
@@ -262,16 +267,17 @@ export default function CustomerSignup() {
                 <IoCamera size={28} className="text-text-muted" />
               )}
             </div>
+            <p className="text-xs text-text-muted">Profile photo *</p>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={handleCamera}
-                className="px-4 py-2 bg-primary text-white text-xs rounded-lg flex items-center gap-1"
+                className="px-4 py-2 bg-primary text-white text-xs rounded-lg flex items-center gap-1.5 font-medium"
               >
                 <IoCamera size={14} />
                 Take Selfie
               </button>
-              <label className="px-4 py-2 bg-gray-100 text-gray-700 text-xs rounded-lg flex items-center gap-1 cursor-pointer">
+              <label className="px-4 py-2 bg-surface border border-border text-text-secondary text-xs rounded-lg flex items-center gap-1.5 cursor-pointer font-medium">
                 <IoCloudUpload size={14} />
                 Upload
                 <input

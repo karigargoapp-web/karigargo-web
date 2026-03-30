@@ -195,6 +195,12 @@ export default function WorkerSignup() {
       }
       const userId = authData.user?.id
       if (!userId) throw new Error('Signup failed — could not get user ID')
+      // Supabase silently returns a fake user when the email already exists
+      // (identities array is empty). The fake UUID is not in auth.users → FK violation.
+      if ((authData.user?.identities?.length ?? 0) === 0) {
+        setStep(0)
+        throw new Error('An account with this email already exists. Please log in instead.')
+      }
 
       let photoUrl = ''
       let cnicFrontUrl = ''
