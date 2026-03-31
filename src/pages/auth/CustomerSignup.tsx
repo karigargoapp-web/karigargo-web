@@ -251,18 +251,23 @@ export default function CustomerSignup() {
       </div>
 
       <div className="flex-1 px-6 py-6 space-y-5 overflow-y-auto pb-10">
-        <button
-          onClick={handleGoogle}
-          className="btn-ghost flex items-center justify-center gap-3 w-full"
-        >
-          <IoLogoGoogle size={18} className="text-[#4285F4]" />
-          Sign up with Google
-        </button>
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-xs text-text-muted">or create with email</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
+      {/* Show Google button only when no manual form data entered */}
+        {!(name || email || password || phone || city || cnic || photo || cnicFront || cnicBack) && (
+          <>
+            <button
+              onClick={handleGoogle}
+              className="btn-ghost flex items-center justify-center gap-3 w-full"
+            >
+              <IoLogoGoogle size={18} className="text-[#4285F4]" />
+              Sign up with Google
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-text-muted">or create with email</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+          </>
+        )}
 
         {/* Profile Photo */}
         <div className="flex justify-center">
