@@ -70,8 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               'auth-portal-error',
               `This account is registered as a ${data.role}. Please sign in on the ${correctPage} page.`,
             )
-            setSession(null)
-            setUser(null)
+            // Force a full-page redirect so the login component remounts and shows the error toast
+            window.location.href = data.role === 'worker' ? '/login/worker' : '/login'
             return
           }
         }
