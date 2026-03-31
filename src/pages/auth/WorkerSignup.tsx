@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
-import { IoArrowBack, IoCamera, IoCheckmarkCircle, IoCloudUpload, IoLogoGoogle, IoClose, IoLanguage } from 'react-icons/io5'
+import { IoArrowBack, IoCamera, IoCheckmarkCircle, IoCloudUpload, IoClose, IoLanguage } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
 import { SERVICE_CATEGORIES, PAKISTAN_CITIES } from '../../types'
