@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoArrowBack, IoBriefcase, IoLocation, IoCash, IoPricetag, IoChevronDown, IoChevronUp, IoTrash } from 'react-icons/io5'
+import { IoArrowBack, IoBriefcase, IoLocation, IoCash, IoPricetag, IoTrash } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import type { Job, Bid } from '../../types'
@@ -186,7 +186,6 @@ export default function MyJobs() {
                         <IoTrash size={18} />
                       </button>
                     )}
-                    {isExpanded ? <IoChevronUp size={22} className="text-text-muted shrink-0" /> : <IoChevronDown size={22} className="text-text-muted shrink-0" />}
                   </div>
                 </button>
 
