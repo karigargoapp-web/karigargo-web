@@ -172,21 +172,27 @@ export default function MyJobs() {
                       </span>
                     </div>
                   </div>
-                  {isExpanded ? <IoChevronUp size={22} className="text-text-muted shrink-0 mt-1" /> : <IoChevronDown size={22} className="text-text-muted shrink-0 mt-1" />}
+                  <div className="flex flex-col items-end gap-2">
+                    {/* Delete button - always visible for jobs that can be deleted */}
+                    {canDeleteJob(job) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDeleteConfirmJob(job.id)
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                        title="Delete Job"
+                      >
+                        <IoTrash size={18} />
+                      </button>
+                    )}
+                    {isExpanded ? <IoChevronUp size={22} className="text-text-muted shrink-0" /> : <IoChevronDown size={22} className="text-text-muted shrink-0" />}
+                  </div>
                 </button>
 
                 {/* Expanded bids section */}
                 {isExpanded && (
                   <div className="border-t border-border bg-gray-50 px-4 pb-4 pt-3">
-                    {/* Delete button - only show if no bid accepted yet */}
-                    {canDeleteJob(job) && (
-                      <button
-                        onClick={() => setDeleteConfirmJob(job.id)}
-                        className="w-full mb-3 flex items-center justify-center gap-2 py-2.5 border border-red-200 text-red-600 rounded-xl text-sm font-medium hover:bg-red-50 transition"
-                      >
-                        <IoTrash size={16} /> Delete Job
-                      </button>
-                    )}
                     {jobBids.length === 0 ? (
                       <p className="text-sm text-text-muted text-center py-4">No bids yet — check back soon</p>
                     ) : (
