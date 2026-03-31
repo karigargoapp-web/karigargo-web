@@ -97,6 +97,9 @@ export default function CustomerSignup() {
   }
 
   const handleSubmit = async () => {
+    // Debug: log which Supabase project we're using
+    console.log('[Signup] Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
+    
     const fieldErr =
       (!photo ? 'Please upload a profile photo' : null) ||
       validatePersonName(name) ||
