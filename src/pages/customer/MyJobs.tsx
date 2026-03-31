@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoArrowBack, IoBriefcase, IoLocation, IoCash, IoPricetag, IoChevronDown, IoChevronUp } from 'react-icons/io5'
+import { IoArrowBack, IoBriefcase, IoLocation, IoCash, IoPricetag, IoChevronDown, IoChevronUp, IoTrash } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import type { Job, Bid } from '../../types'
+import toast from 'react-hot-toast'
 
 type TabKey = 'active' | 'completed' | 'cancelled'
 
@@ -15,6 +16,8 @@ export default function MyJobs() {
   const [tab, setTab] = useState<TabKey>('active')
   const [loading, setLoading] = useState(true)
   const [expandedJob, setExpandedJob] = useState<string | null>(null)
+  const [deleteConfirmJob, setDeleteConfirmJob] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -40,6 +43,24 @@ export default function MyJobs() {
     }
     fetchData()
   }, [user])
+
+  const deleteJob = async (jobId: string) => {
+    setDeleting(true)
+    const { error } = await supabase.from('jobs').delete().eq('id', jobId)
+    setDeleting(false)
+    setDeleteConfirmJob(null)
+    if (error) {
+      toast.error('Failed to delete job: ' + error.message)
+      return
+    }
+    toast.success('Job deleted successfully')
+    setJobs(prev => prev.filter(j => j.id !== jobId))
+  }
+
+  const canDeleteJob = (job: Job) => {
+    // Can delete only if status is 'pending' (no bid accepted yet)
+    return job.status === 'pending'
+  }
 
   const filtered = jobs.filter(j => {
     if (tab === 'active') return j.status !== 'completed' && j.status !== 'cancelled'
@@ -157,6 +178,15 @@ export default function MyJobs() {
                 {/* Expanded bids section */}
                 {isExpanded && (
                   <div className="border-t border-border bg-gray-50 px-4 pb-4 pt-3">
+                    {/* Delete button - only show if no bid accepted yet */}
+                    {canDeleteJob(job) && (
+                      <button
+                        onClick={() => setDeleteConfirmJob(job.id)}
+                        className="w-full mb-3 flex items-center justify-center gap-2 py-2.5 border border-red-200 text-red-600 rounded-xl text-sm font-medium hover:bg-red-50 transition"
+                      >
+                        <IoTrash size={16} /> Delete Job
+                      </button>
+                    )}
                     {jobBids.length === 0 ? (
                       <p className="text-sm text-text-muted text-center py-4">No bids yet — check back soon</p>
                     ) : (
@@ -222,6 +252,36 @@ export default function MyJobs() {
           })
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirmJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <IoTrash size={24} className="text-red-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-text-primary text-center mb-2">Delete Job?</h3>
+            <p className="text-sm text-text-secondary text-center mb-6">
+              This will permanently delete your job posting. This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmJob(null)}
+                className="flex-1 py-3 border border-border rounded-xl text-sm font-medium text-text-primary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteJob(deleteConfirmJob)}
+                disabled={deleting}
+                className="flex-1 py-3 bg-red-500 text-white rounded-xl text-sm font-medium disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

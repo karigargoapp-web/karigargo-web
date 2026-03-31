@@ -8,8 +8,9 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { SERVICE_CATEGORIES } from '../../types'
 import LocationPicker from '../../components/LocationPicker'
+import LocationAutocomplete from '../../components/LocationAutocomplete'
 import toast from 'react-hot-toast'
-import { validateJobBudget, validateJobDescription, validateJobTitle } from '../../lib/validation'
+import { validateJobBudget, validateJobDescription, validateJobTitle, validateVoiceNote, validateMediaItems } from '../../lib/validation'
 
 interface MediaItem {
   file: File
@@ -142,11 +143,12 @@ export default function PostJob() {
     const err =
       validateJobTitle(title) ||
       validateJobDescription(description) ||
-      validateJobBudget(budget)
+      validateJobBudget(budget) ||
+      validateVoiceNote(voiceBlob, { required: true }) ||
+      validateMediaItems(mediaItems, { required: true })
     if (err) return toast.error(err)
-    if (!category || !location) {
-      return toast.error('Please choose a category and set a location')
-    }
+    if (!category) return toast.error('Please select a category')
+    if (!location.trim()) return toast.error('Please enter a location')
     if (!user) return
     setLoading(true)
 
@@ -384,18 +386,12 @@ export default function PostJob() {
         {/* Location */}
         <div className="bg-white rounded-2xl shadow-sm p-5">
           <label className="text-sm font-medium text-text-primary mb-1.5 block">Location *</label>
-          <div className="relative">
-            <IoLocation
-              size={17}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
-            />
-            <input
-              placeholder="Enter area or address"
-              value={location}
-              onChange={e => setLocation(e.target.value)}
-              className="!pl-10"
-            />
-          </div>
+          <LocationAutocomplete
+            value={location}
+            onChange={setLocation}
+            onSelect={handleLocationPick}
+            placeholder="Enter area or address (e.g., DHA Lahore, Gulshan Karachi)"
+          />
           <button
             type="button"
             onClick={() => setShowMap(v => !v)}

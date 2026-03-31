@@ -120,6 +120,27 @@ export function validateImageFile(file: File | null, { required }: { required: b
   return null
 }
 
+const MAX_VOICE_BYTES = 10 * 1024 * 1024 // 10MB
+const MAX_MEDIA_BYTES = 50 * 1024 * 1024 // 50MB per file
+const MAX_MEDIA_COUNT = 5 // max 5 photos/videos
+
+export function validateVoiceNote(voiceBlob: Blob | null, { required }: { required: boolean }): string | null {
+  if (!voiceBlob) return required ? 'Voice note is required to explain the problem' : null
+  if (voiceBlob.size > MAX_VOICE_BYTES) return 'Voice note must be 10MB or smaller'
+  return null
+}
+
+export function validateMediaItems(items: { file: File }[], { required }: { required: boolean }): string | null {
+  if (items.length === 0) return required ? 'Please add at least one photo or video showing the problem' : null
+  if (items.length > MAX_MEDIA_COUNT) return `Maximum ${MAX_MEDIA_COUNT} photos/videos allowed`
+  for (const item of items) {
+    if (item.file.size > MAX_MEDIA_BYTES) {
+      return `Each file must be 50MB or smaller (${item.file.name})`
+    }
+  }
+  return null
+}
+
 const MAX_CERT_BYTES = 10 * 1024 * 1024
 
 export function validateCertificateFile(file: File): string | null {
