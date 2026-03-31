@@ -10,7 +10,7 @@ import { SERVICE_CATEGORIES } from '../../types'
 import LocationPicker from '../../components/LocationPicker'
 import LocationAutocomplete from '../../components/LocationAutocomplete'
 import toast from 'react-hot-toast'
-import { validateJobBudget, validateJobDescription, validateJobTitle, validateVoiceNote, validateMediaItems } from '../../lib/validation'
+import { validateJobBudget, validateJobDescription, validateJobTitle, validateVoiceNote, validateMediaItems, validateJobDate } from '../../lib/validation'
 
 interface MediaItem {
   file: File
@@ -145,7 +145,8 @@ export default function PostJob() {
       validateJobDescription(description) ||
       validateJobBudget(budget) ||
       validateVoiceNote(voiceBlob, { required: true }) ||
-      validateMediaItems(mediaItems, { required: true })
+      validateMediaItems(mediaItems, { required: true }) ||
+      validateJobDate(date)
     if (err) return toast.error(err)
     if (!category) return toast.error('Please select a category')
     if (!location.trim()) return toast.error('Please enter a location')
@@ -429,7 +430,7 @@ export default function PostJob() {
               <label className="text-sm font-medium text-text-primary mb-1.5 flex items-center gap-1">
                 <IoCalendar size={14} /> Date
               </label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+              <input type="date" value={date} min={new Date().toISOString().split('T')[0]} onChange={e => setDate(e.target.value)} />
             </div>
             <div>
               <label className="text-sm font-medium text-text-primary mb-1.5 flex items-center gap-1">

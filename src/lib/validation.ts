@@ -143,6 +143,15 @@ export function validateMediaItems(items: { file: File }[], { required }: { requ
 
 const MAX_CERT_BYTES = 10 * 1024 * 1024
 
+export function validateJobDate(dateRaw: string): string | null {
+  if (!dateRaw) return null // date is optional
+  const selected = new Date(dateRaw)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  if (selected < today) return 'Job date cannot be in the past'
+  return null
+}
+
 export function validateCertificateFile(file: File): string | null {
   const ok =
     /^image\/(jpeg|png|webp)$/i.test(file.type) ||
