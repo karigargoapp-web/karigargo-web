@@ -122,6 +122,13 @@ export default function CustomerSignup() {
     submitLockRef.current = true
     setLoading(true)
 
+    const rawPhone = phone.trim()
+    const phoneForDb = rawPhone.startsWith('0') ? '+92' + rawPhone.slice(1) : rawPhone
+    if (rawPhone) {
+      const { data: existingPhone } = await supabase.from('users').select('id').eq('phone', phoneForDb).maybeSingle()
+      if (existingPhone) { toast.error('This phone number is already registered. Please use a different number or login.'); setLoading(false); return }
+    }
+
     const cnicFormatted = formatCNICDisplay(cnic)
 
     try {
@@ -237,7 +244,7 @@ export default function CustomerSignup() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <div className="top-bar flex items-center gap-3">
-        <button onClick={() => nav('/login')}>
+        <button onClick={() => nav(-1)}>
           <IoArrowBack size={22} className="text-white" />
         </button>
         <h1 className="text-lg font-semibold text-white">Create Customer Account</h1>

@@ -112,6 +112,12 @@ export default function ReviewCustomer() {
         >
           {loading ? 'Submitting...' : 'Submit Review'}
         </button>
+        <button
+          onClick={() => nav('/worker/dashboard')}
+          className="w-full border border-border bg-white text-text-primary py-3.5 rounded-2xl text-sm font-medium shadow-sm"
+        >
+          Review Later
+        </button>
       </div>
     </div>
   )

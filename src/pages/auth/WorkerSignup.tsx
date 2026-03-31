@@ -256,6 +256,17 @@ export default function WorkerSignup() {
 
       const rawPhone = phone.trim()
       const phoneForDb = rawPhone.startsWith('0') ? '+92' + rawPhone.slice(1) : rawPhone
+
+      // Check if phone number is already registered
+      if (rawPhone) {
+        const { data: existingPhone } = await supabase.from('users').select('id').eq('phone', phoneForDb).maybeSingle()
+        if (existingPhone) {
+          toast.error('This phone number is already registered. Please use a different number or login.')
+          setLoading(false)
+          return
+        }
+      }
+
       const cnicFormatted = formatCNICDisplay(cnic)
 
       if (isOAuthCompletion) {
@@ -338,9 +349,13 @@ export default function WorkerSignup() {
     <div className="min-h-screen bg-white flex flex-col">
       <div className="top-bar">
         <div className="flex items-center gap-3 mb-4">
-          <button onClick={() => step > 0 ? setStep(s => s - 1) : nav('/login')}>
-            <IoArrowBack size={22} className="text-white" />
-          </button>
+          <button
+          onClick={() => step > 0 ? setStep(s => s - 1) : nav(-1)}
+          disabled={isOAuthCompletion && step === 0}
+          className={`${isOAuthCompletion && step === 0 ? 'invisible' : ''}`}
+        >
+          <IoArrowBack size={22} className="text-white" />
+        </button>
           <h1 className="text-lg font-semibold text-white">Worker Registration</h1>
         </div>
         {/* Progress */}
@@ -438,7 +453,7 @@ export default function WorkerSignup() {
               <label className="text-sm text-text-secondary mb-1.5 block">Phone Number *</label>
               <input
                 type="tel"
-                placeholder="03001234567"
+                placeholder="03XX-XXXXXXX"
                 value={phone}
                 onChange={e => {
                   const cleaned = e.target.value.replace(/[^0-9]/g, '')

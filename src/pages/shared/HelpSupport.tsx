@@ -81,7 +81,7 @@ export default function HelpSupport() {
         </div>
       </div>
 
-      <div className="flex-1 px-5 py-5 space-y-4 overflow-y-auto pb-8">
+      <div className="flex-1 px-5 py-5 space-y-6 overflow-y-auto pb-8">
         {!showContactForm ? (
           <>
             {/* Contact Options */}

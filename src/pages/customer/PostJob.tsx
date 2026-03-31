@@ -423,7 +423,7 @@ export default function PostJob() {
             onClick={() => setShowMap(v => !v)}
             className="mt-2 text-xs text-primary font-medium flex items-center gap-1"
           >
-            📍 {showMap ? 'Hide map' : 'Pick on map (optional)'}
+            📍 {showMap ? 'Hide map' : 'Pick on map'}
           </button>
           {showMap && (
             <div className="mt-3">

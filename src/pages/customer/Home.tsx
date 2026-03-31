@@ -69,7 +69,7 @@ export default function CustomerHome() {
       {/* Top bar */}
       <div className="top-bar">
         <div className="flex items-center justify-center mb-1">
-          <p className="text-white text-xl font-semibold">{t('home')}</p>
+          <p className="text-white text-xl font-semibold">KarigarGo</p>
         </div>
         <div className="flex items-center justify-between mb-5">
           <div>
@@ -168,11 +168,7 @@ export default function CustomerHome() {
                 <div>
                   <p className="text-sm font-medium text-text-primary">{job.title}</p>
                   <p className="text-xs text-text-secondary mt-1">{job.worker_name}</p>
-                  <div className="flex gap-0.5 mt-1">
-                    {[1, 2, 3, 4, 5].map(i => (
-                      <span key={i} className="star-filled text-sm">★</span>
-                    ))}
-                  </div>
+                  <span className="pill-completed mt-1 inline-block">Completed</span>
                 </div>
                 <span className="text-xs text-text-muted">
                   {new Date(job.completed_at || job.updated_at).toLocaleDateString()}

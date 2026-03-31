@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker } from 'react-leaflet'
 import L from 'leaflet'
-import { IoArrowBack, IoLocation, IoCalendar, IoWarning, IoChatbubble, IoNavigate, IoCash, IoTime, IoPerson } from 'react-icons/io5'
+import { IoArrowBack, IoLocation, IoCalendar, IoWarning, IoChatbubble, IoNavigate, IoCash, IoPerson } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import type { Job, Bid } from '../../types'
@@ -34,7 +34,6 @@ export default function JobBid() {
   const [job, setJob] = useState<Job | null>(null)
   const [existingBid, setExistingBid] = useState<Bid | null>(null)
   const [inspectionCharge, setInspectionCharge] = useState('')
-  const [completionTime, setCompletionTime] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [showDirDialog, setShowDirDialog] = useState(false)
@@ -317,23 +316,6 @@ export default function JobBid() {
                 <p className="text-xs text-text-muted mt-1 italic">Work charges will be finalized after checking the work.</p>
               </div>
 
-              {/* Estimated completion time */}
-              <div>
-                <label className="text-sm font-medium text-text-primary mb-2 block">Estimated Completion Time</label>
-                <div className="flex items-center border border-border rounded-xl overflow-hidden">
-                  <div className="px-3 py-3 bg-gray-50">
-                    <IoTime size={18} className="text-text-muted" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="e.g. 2 hours, 1 day"
-                    value={completionTime}
-                    onChange={e => setCompletionTime(e.target.value)}
-                    className="flex-1 border-0 rounded-none focus:ring-0"
-                  />
-                </div>
-              </div>
-
               {/* Message */}
               <div>
                 <label className="text-sm font-medium text-text-primary mb-2 block">Message to Customer (optional)</label>
@@ -352,7 +334,7 @@ export default function JobBid() {
                 disabled={loading || overMax || !inspectionCharge}
                 className="btn-primary"
               >
-                {loading ? 'Getting location & submitting...' : 'Submit Bid'}
+                {loading ? 'Submitting bid...' : 'Submit Bid'}
               </button>
               <button
                 onClick={() => nav(-1)}
