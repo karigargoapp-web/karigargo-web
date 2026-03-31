@@ -259,7 +259,13 @@ export default function WorkerSignup() {
 
       // Check if phone number is already registered
       if (rawPhone) {
-        const { data: existingPhone } = await supabase.from('users').select('id').eq('phone', phoneForDb).maybeSingle()
+        const { data: existingPhone, error: phoneCheckError } = await supabase.from('users').select('id').eq('phone', phoneForDb).maybeSingle()
+        if (phoneCheckError) {
+          console.error('Phone check error:', phoneCheckError)
+          toast.error('Could not verify phone number. Please try again.')
+          setLoading(false)
+          return
+        }
         if (existingPhone) {
           toast.error('This phone number is already registered. Please use a different number or login.')
           setLoading(false)

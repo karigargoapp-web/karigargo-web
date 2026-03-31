@@ -125,8 +125,18 @@ export default function CustomerSignup() {
     const rawPhone = phone.trim()
     const phoneForDb = rawPhone.startsWith('0') ? '+92' + rawPhone.slice(1) : rawPhone
     if (rawPhone) {
-      const { data: existingPhone } = await supabase.from('users').select('id').eq('phone', phoneForDb).maybeSingle()
-      if (existingPhone) { toast.error('This phone number is already registered. Please use a different number or login.'); setLoading(false); return }
+      const { data: existingPhone, error: phoneCheckError } = await supabase.from('users').select('id').eq('phone', phoneForDb).maybeSingle()
+      if (phoneCheckError) {
+        console.error('Phone check error:', phoneCheckError)
+        toast.error('Could not verify phone number. Please try again.')
+        setLoading(false)
+        return
+      }
+      if (existingPhone) {
+        toast.error('This phone number is already registered. Please use a different number or login.')
+        setLoading(false)
+        return
+      }
     }
 
     const cnicFormatted = formatCNICDisplay(cnic)
