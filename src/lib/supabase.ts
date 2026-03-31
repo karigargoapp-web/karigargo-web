@@ -21,7 +21,16 @@ if (import.meta.env.DEV && missing) {
   )
 }
 
+const sessionStorageOverride = typeof window !== 'undefined' ? window.sessionStorage : undefined
+
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.invalid',
-  supabaseAnonKey || 'invalid-placeholder-key'
+  supabaseAnonKey || 'invalid-placeholder-key',
+  {
+    auth: {
+      // Use sessionStorage (per-tab) instead of localStorage (cross-tab)
+      // This prevents auth conflicts when user has multiple browser profiles open
+      storage: sessionStorageOverride,
+    },
+  }
 )
