@@ -64,11 +64,13 @@ export default function WorkerMessages() {
         unreadMap[m.job_id] = (unreadMap[m.job_id] || 0) + 1
       })
 
-      const result: ConvJob[] = jobsData.map(j => ({
-        ...(j as unknown as Job),
-        lastMessage: lastMsgMap[j.id],
-        unreadCount: unreadMap[j.id] || 0,
-      }))
+      const result: ConvJob[] = jobsData
+        .filter(j => lastMsgMap[j.id])
+        .map(j => ({
+          ...(j as unknown as Job),
+          lastMessage: lastMsgMap[j.id],
+          unreadCount: unreadMap[j.id] || 0,
+        }))
 
       setConvs(result)
       setLoading(false)
