@@ -32,6 +32,7 @@ export default function CustomerSignup() {
   const [loading, setLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
+  const [showGoogleButton, setShowGoogleButton] = useState(true)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const submitLockRef = useRef(false)
@@ -261,8 +262,8 @@ export default function CustomerSignup() {
       </div>
 
       <div className="flex-1 px-6 py-6 space-y-5 overflow-y-auto pb-10">
-      {/* Show Google button only when no manual form data entered */}
-        {!(name || email || password || phone || city || cnic || photo || cnicFront || cnicBack) && (
+      {/* Show Google button only when user hasn't started manual entry */}
+        {showGoogleButton && (
           <>
             <button
               onClick={handleGoogle}
@@ -279,6 +280,7 @@ export default function CustomerSignup() {
           </>
         )}
 
+        <div onClick={() => setShowGoogleButton(false)}>
         {/* Profile Photo */}
         <div className="flex justify-center">
           <div className="flex flex-col items-center gap-3">
@@ -450,6 +452,7 @@ export default function CustomerSignup() {
             Login
           </button>
         </p>
+        </div>
       </div>
 
       {/* Language Toggle - Bottom Right */}
