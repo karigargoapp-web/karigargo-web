@@ -86,7 +86,12 @@ function ProtectedRoute({ allowedRoles }: { allowedRoles?: string[] }) {
 
 function AuthRoute() {
   const { user, loading } = useAuth()
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-surface">Loading...</div>
+  if (loading) return (
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+      <p className="text-sm text-text-secondary">Loading...</p>
+    </div>
+  )
   if (user) {
     if (!user.profile_complete) return <Navigate to={completionRoute(user.role)} replace />
     return <Navigate to={roleHome(user.role)} replace />

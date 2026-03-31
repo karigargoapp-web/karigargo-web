@@ -218,7 +218,7 @@ export default function WorkerProfilePage() {
               </div>
               <div className="text-left">
                 <p className="text-sm font-medium text-text-primary">Help & Support</p>
-                <p className="text-xs text-text-muted">FAQs and contact</p>
+                <p className="text-xs text-text-muted">FAQs and Contact</p>
               </div>
             </div>
             <IoChevronForward className="text-text-muted" />

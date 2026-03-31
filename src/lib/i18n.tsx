@@ -68,6 +68,7 @@ const translations = {
     preferences: 'Preferences',
     support: 'Support',
     helpSupport: 'Help & Support',
+    faqsAndContact: 'FAQs and Contact',
     language: 'Language',
     logout: 'Logout',
     updatePassword: 'Update your password',
