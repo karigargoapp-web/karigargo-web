@@ -22,7 +22,7 @@ export default function WorkerDashboard() {
     if (!user) return
     const loadAll = async () => {
       const [jobsRes, profileRes, activeRes, completedRes] = await Promise.all([
-        supabase.from('jobs').select('*').eq('status', 'pending').order('created_at', { ascending: false }),
+        supabase.from('jobs').select('*').eq('status', 'pending').eq('city', user.city || '').order('created_at', { ascending: false }),
         supabase.from('worker_profiles').select('*').eq('user_id', user.id).maybeSingle(),
         supabase.from('jobs').select('*').eq('worker_id', user.id).neq('status', 'completed').neq('status', 'cancelled').limit(1).maybeSingle(),
         supabase.from('jobs').select('inspection_charges,work_cost,platform_fee').eq('worker_id', user.id).eq('status', 'completed'),
@@ -41,16 +41,19 @@ export default function WorkerDashboard() {
     }
     loadAll()
 
-    // Real-time: new pending jobs appear instantly; stale jobs drop off when status changes
+    // Real-time: new pending jobs appear instantly; only show jobs in worker's city
+    const workerCity = user.city || ''
     const channel = supabase
       .channel('worker-jobs-feed')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'jobs', filter: 'status=eq.pending' },
         (payload) => {
+          const newJob = payload.new as Job
+          if (newJob.city && workerCity && newJob.city !== workerCity) return
           setJobs(prev => {
-            if (prev.some(j => j.id === payload.new.id)) return prev
-            return [payload.new as Job, ...prev]
+            if (prev.some(j => j.id === newJob.id)) return prev
+            return [newJob, ...prev]
           })
         }
       )

@@ -130,6 +130,9 @@ create table if not exists jobs (
   work_cost           integer,                 -- proposed by worker after inspection
   platform_fee        integer,                 -- 10% of (inspection + work_cost)
 
+  -- City (auto-assigned from customer's registered city for location-based filtering)
+  city                text,
+
   -- Timestamps
   completed_at        timestamptz,
   created_at          timestamptz not null default now(),
@@ -884,6 +887,12 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
+
+-- ========================
+-- MIGRATIONS
+-- ========================
+-- Add city to jobs for location-based worker filtering
+alter table jobs add column if not exists city text;
 
 -- ========================
 -- DONE ✅

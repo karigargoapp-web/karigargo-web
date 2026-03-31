@@ -197,6 +197,7 @@ export default function PostJob() {
         image_url: imageUrlValue,
         voice_note_url: voiceNoteUrl || null,
         status: 'pending',
+        city: user.city || null,
         customer_id: user.id,
         customer_name: user.name,
         customer_photo: user.profile_photo_url || null,

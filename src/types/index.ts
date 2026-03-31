@@ -49,6 +49,7 @@ export interface Job {
   image_url?: string
   voice_note_url?: string
   status: JobStatus
+  city?: string
   customer_id: string
   customer_name: string
   customer_photo?: string
