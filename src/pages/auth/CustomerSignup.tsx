@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IoArrowBack, IoCamera, IoLogoGoogle, IoCheckmarkCircle, IoCloudUpload, IoClose, IoLanguage } from 'react-icons/io5'
+import { IoArrowBack, IoCamera, IoCheckmarkCircle, IoCloudUpload, IoClose, IoLanguage } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
 import { emailRedirect } from '../../lib/authRedirect'
 import { PAKISTAN_CITIES } from '../../types'
@@ -32,7 +32,6 @@ export default function CustomerSignup() {
   const [loading, setLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
-  const [showGoogleButton, setShowGoogleButton] = useState(true)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const submitLockRef = useRef(false)
@@ -89,14 +88,6 @@ export default function CustomerSignup() {
       videoRef.current.srcObject = streamRef.current
     }
   }, [showCamera])
-
-  const handleGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: emailRedirect('/customer/home') },
-    })
-    if (error) toast.error(error.message)
-  }
 
   const uploadFile = async (file: File, folder: string) => {
     const path = `${folder}/${Date.now()}_${file.name}`
@@ -262,25 +253,6 @@ export default function CustomerSignup() {
       </div>
 
       <div className="flex-1 px-6 py-6 space-y-5 overflow-y-auto pb-10">
-      {/* Show Google button only when user hasn't started manual entry */}
-        {showGoogleButton && (
-          <>
-            <button
-              onClick={handleGoogle}
-              className="btn-ghost flex items-center justify-center gap-3 w-full"
-            >
-              <IoLogoGoogle size={18} className="text-[#4285F4]" />
-              Sign up with Google
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-text-muted">or create with email</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-          </>
-        )}
-
-        <div onClick={() => setShowGoogleButton(false)}>
         {/* Profile Photo */}
         <div className="flex justify-center">
           <div className="flex flex-col items-center gap-3">
@@ -452,7 +424,6 @@ export default function CustomerSignup() {
             Login
           </button>
         </p>
-        </div>
       </div>
 
       {/* Language Toggle - Bottom Right */}
