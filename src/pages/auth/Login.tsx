@@ -123,7 +123,7 @@ export default function Login() {
           </div>
           <button
             onClick={() => nav('/login/worker')}
-            className="flex-1 bg-white/5 border border-white/10 rounded-2xl py-3.5 px-3 text-left hover:bg-white/10 transition"
+            className="flex-1 bg-white/5 border border-white/10 rounded-2xl py-3.5 px-3 hover:bg-white/10 transition"
           >
             <p className="text-white/60 font-medium text-sm">{t('worker')}</p>
             <p className="text-white/40 text-xs mt-0.5">{t('findJobs')}</p>
