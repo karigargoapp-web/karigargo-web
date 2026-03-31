@@ -41,6 +41,7 @@ import WorkerProfile from './pages/worker/Profile'
 import WorkerMessages from './pages/worker/Messages'
 import WorkerChangePassword from './pages/worker/ChangePassword'
 import WorkerPersonalInfo from './pages/worker/PersonalInfo'
+import WorkerJobSummary from './pages/worker/JobSummary'
 
 // Admin
 import AdminDashboard from './pages/admin/Dashboard'
@@ -167,6 +168,7 @@ export function AppRouter() {
           <Route path="/worker/profile" element={<WorkerProfile />} />
           <Route path="/worker/change-password" element={<WorkerChangePassword />} />
           <Route path="/worker/personal-info" element={<WorkerPersonalInfo />} />
+          <Route path="/worker/job-summary/:jobId" element={<WorkerJobSummary />} />
         </Route>
 
         {/* Admin routes */}

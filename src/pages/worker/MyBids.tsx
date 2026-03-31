@@ -221,15 +221,21 @@ export default function MyBids() {
                     PKR{' '}
                     {((job.inspection_charges || 0) + (job.work_cost || 0)).toLocaleString()}
                   </p>
+                  <p className="text-[10px] text-text-muted mt-0.5">
+                    {new Date(job.updated_at).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map(i => (
-                  <span key={i} className="text-base text-yellow-400">
-                    ★
-                  </span>
-                ))}
-                <span className="text-xs text-text-muted ml-1">Job completed</span>
+              <div className="flex gap-2 pt-3 border-t border-border">
+                <span className="flex-1 flex items-center gap-1 text-xs text-green-600 font-medium">
+                  <IoCheckmarkCircle size={14} /> Completed
+                </span>
+                <button
+                  onClick={() => nav(`/worker/job-summary/${job.id}`)}
+                  className="flex items-center justify-center gap-1.5 bg-primary text-white px-4 py-2 rounded-xl text-xs font-medium"
+                >
+                  View Details
+                </button>
               </div>
             </div>
           ))
