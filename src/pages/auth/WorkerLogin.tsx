@@ -181,7 +181,7 @@ export default function WorkerLogin() {
                 </button>
               </div>
             </div>
-            <p className="text-sm text-primary font-medium text-right cursor-pointer">{t('forgotPassword')}</p>
+            <p className="text-sm text-primary font-medium text-right cursor-pointer" onClick={() => nav('/forgot-password')}>{t('forgotPassword')}</p>
             <button onClick={handleLogin} disabled={loading} className="btn-primary">
               {loading ? t('loading') : t('login')}
             </button>

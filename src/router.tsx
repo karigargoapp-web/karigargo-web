@@ -52,6 +52,8 @@ import AdminReports from './pages/admin/Reports'
 import BrowserNotificationPrompt from './components/BrowserNotificationPrompt'
 import CompleteCustomerProfile from './pages/auth/CompleteCustomerProfile'
 import CompleteWorkerProfile from './pages/auth/CompleteWorkerProfile'
+import ForgotPassword from './pages/auth/ForgotPassword'
+import ResetPassword from './pages/auth/ResetPassword'
 
 function roleHome(role: string) {
   if (role === 'customer') return '/customer/home'
@@ -119,6 +121,8 @@ export function AppRouter() {
 
         {/* Email confirmation - accessible without auth check */}
         <Route path="/email-confirmed" element={<EmailConfirmed />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Profile completion (logged in but profile_complete = false) */}
         <Route element={<ProfileCompletionRoute />}>
