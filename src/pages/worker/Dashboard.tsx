@@ -44,7 +44,7 @@ export default function WorkerDashboard() {
     // Real-time: new pending jobs appear instantly; only show jobs in worker's city
     const workerCity = user.city || ''
     const channel = supabase
-      .channel('worker-jobs-feed')
+      .channel(`worker-jobs-feed-${user.id}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'jobs', filter: 'status=eq.pending' },

@@ -118,7 +118,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // before clearing loading so no route guard ever sees loading=false with user=null.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // TOKEN_REFRESHED  — silent JWT rotation, no profile change needed
+      // PASSWORD_RECOVERY — recovery session; user hasn't logged in yet, don't fetch
+      // USER_UPDATED      — fired by updateUser(); acquires the auth lock itself,
+      //                     running fetchUserProfile concurrently causes lock-steal errors
+      if (
+        event === 'TOKEN_REFRESHED' ||
+        event === 'PASSWORD_RECOVERY' ||
+        event === 'USER_UPDATED'
+      ) return
+
       setSession(session)
       if (session?.user) {
         await fetchUserProfile(session.user)

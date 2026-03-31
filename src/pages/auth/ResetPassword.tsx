@@ -2,29 +2,36 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoLockClosed, IoEyeOutline, IoEyeOffOutline, IoCheckmarkCircle } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../hooks/useAuth'
 import toast from 'react-hot-toast'
 
 export default function ResetPassword() {
   const nav = useNavigate()
+  const { session } = useAuth()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
-  const [validSession, setValidSession] = useState(false)
+  const [checked, setChecked] = useState(false)
 
+  // Poll for recovery session established by Supabase from URL hash
+  // useAuth skips PASSWORD_RECOVERY events, so we check directly here
   useEffect(() => {
-    // Supabase fires onAuthStateChange with event=PASSWORD_RECOVERY when the
-    // recovery link is clicked. We just need to confirm a session exists.
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setValidSession(true)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') setValidSession(true)
-    })
-    return () => subscription.unsubscribe()
+    let attempts = 0
+    const interval = setInterval(async () => {
+      attempts++
+      const { data } = await supabase.auth.getSession()
+      if (data.session || attempts > 20) {
+        setChecked(true)
+        clearInterval(interval)
+      }
+    }, 250)
+    return () => clearInterval(interval)
   }, [])
+
+  // Also consider valid if useAuth already has a session
+  const validSession = Boolean(session) || checked
 
   const handleReset = async () => {
     if (!password) return toast.error('Enter a new password')
