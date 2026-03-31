@@ -56,6 +56,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle()
 
       if (data) {
+        // Enforce portal role for BOTH email/password and Google OAuth.
+        // The login pages set 'auth-intended-portal' in sessionStorage before any sign-in.
+        // Checking it here (inside fetchUserProfile) is race-condition-free because
+        // the role check and setUser happen sequentially in the same async call.
+        const intendedPortal = sessionStorage.getItem('auth-intended-portal')
+        if (intendedPortal) {
+          sessionStorage.removeItem('auth-intended-portal')
+          if (data.role !== intendedPortal) {
+            await supabase.auth.signOut({ scope: 'local' })
+            const correctPage = data.role === 'worker' ? 'worker login' : 'customer login'
+            sessionStorage.setItem(
+              'auth-portal-error',
+              `This account is registered as a ${data.role}. Please sign in on the ${correctPage} page.`,
+            )
+            setSession(null)
+            setUser(null)
+            return
+          }
+        }
+
         const updates: Record<string, unknown> = {}
         if (!data.verified && (emailConfirmed || isGoogleUser)) {
           updates.verified = true

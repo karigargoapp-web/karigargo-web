@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoLogoGoogle, IoMail, IoLockClosed, IoLanguage, IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5'
 import { supabase } from '../../lib/supabase'
@@ -28,8 +28,11 @@ export default function WorkerLogin() {
     if (emailErr) return toast.error(emailErr)
     setLoading(true)
     setShowResend(false)
+    // Tag the intended portal so fetchUserProfile enforces it (no race condition)
+    sessionStorage.setItem('auth-intended-portal', 'worker')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
+      sessionStorage.removeItem('auth-intended-portal')
       setLoading(false)
       const msg = error.message?.toLowerCase() || ''
       if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
@@ -49,10 +52,8 @@ export default function WorkerLogin() {
       setShowResend(true)
       return toast.error(emailCheck.message)
     }
-
-    const roleCheck = await assertPortalRole('worker')
+    // Role is enforced inside fetchUserProfile — no assertPortalRole here to avoid race
     setLoading(false)
-    if (!roleCheck.ok) return toast.error(roleCheck.message)
   }
 
   const handleResend = async () => {
@@ -69,14 +70,20 @@ export default function WorkerLogin() {
     else toast.success('Confirmation email resent!')
   }
 
+  useEffect(() => {
+    const err = sessionStorage.getItem('auth-portal-error')
+    if (err) { sessionStorage.removeItem('auth-portal-error'); toast.error(err) }
+  }, [])
+
   const handleGoogle = async () => {
     setGoogleLoading(true)
     localStorage.setItem('oauth-intended-role', 'worker')
+    sessionStorage.setItem('auth-intended-portal', 'worker')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: emailRedirect('/worker/dashboard') },
     })
-    if (error) { toast.error(error.message); setGoogleLoading(false) }
+    if (error) { sessionStorage.removeItem('auth-intended-portal'); toast.error(error.message); setGoogleLoading(false) }
   }
 
   if (googleLoading) {

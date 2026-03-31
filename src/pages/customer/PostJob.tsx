@@ -22,6 +22,30 @@ function formatDuration(s: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
+async function compressImage(file: File, maxPx = 1280, quality = 0.82): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height))
+      const w = Math.round(img.width * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+      canvas.toBlob(
+        blob => resolve(blob ? new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }) : file),
+        'image/jpeg',
+        quality,
+      )
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
+    img.src = url
+  })
+}
+
 export default function PostJob() {
   const nav = useNavigate()
   const { user } = useAuth()
@@ -156,14 +180,15 @@ export default function PostJob() {
     try {
       const ts = Date.now()
 
-      // Parallelize all media uploads
+      // Parallelize all media uploads (images are compressed first to reduce upload size/time)
       const mediaUploadTasks = mediaItems.map(async (item, i) => {
+        const fileToUpload = item.type === 'image' ? await compressImage(item.file) : item.file
         const ext = item.type === 'video' ? 'mp4' : 'jpg'
         const prefix = item.type === 'video' ? 'video' : 'img'
         const path = `jobs/${prefix}_${user.id}_${ts}_${i}.${ext}`
         const { error: upErr } = await supabase.storage
           .from('job-images')
-          .upload(path, item.file)
+          .upload(path, fileToUpload, { contentType: item.type === 'image' ? 'image/jpeg' : undefined })
         if (upErr) throw new Error(`Upload failed: ${upErr.message}`)
         return supabase.storage.from('job-images').getPublicUrl(path).data.publicUrl
       })
