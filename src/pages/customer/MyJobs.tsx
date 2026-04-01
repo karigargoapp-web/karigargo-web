@@ -44,22 +44,24 @@ export default function MyJobs() {
     fetchData()
   }, [user])
 
-  const deleteJob = async (jobId: string) => {
+  const cancelJob = async (jobId: string) => {
     setDeleting(true)
-    const { error } = await supabase.from('jobs').delete().eq('id', jobId)
+    const { error } = await supabase
+      .from('jobs')
+      .update({ status: 'cancelled' })
+      .eq('id', jobId)
     setDeleting(false)
     setDeleteConfirmJob(null)
     if (error) {
-      toast.error('Failed to delete job: ' + error.message)
+      toast.error('Failed to cancel job: ' + error.message)
       return
     }
-    toast.success('Job deleted successfully')
-    setJobs(prev => prev.filter(j => j.id !== jobId))
+    toast.success('Job cancelled')
+    setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'cancelled' } : j))
   }
 
-  const canDeleteJob = (job: Job) => {
-    // Can delete only if status is 'pending' (no bid accepted yet)
-    return job.status === 'pending'
+  const canCancelJob = (job: Job) => {
+    return job.status === 'pending' || job.status === 'bidAccepted'
   }
 
   const filtered = jobs.filter(j => {
@@ -174,14 +176,14 @@ export default function MyJobs() {
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     {/* Delete button - always visible for jobs that can be deleted */}
-                    {canDeleteJob(job) && (
+                    {canCancelJob(job) && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           setDeleteConfirmJob(job.id)
                         }}
                         className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
-                        title="Delete Job"
+                        title="Cancel Job"
                       >
                         <IoTrash size={18} />
                       </button>
@@ -283,9 +285,9 @@ export default function MyJobs() {
             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
               <IoTrash size={24} className="text-red-500" />
             </div>
-            <h3 className="text-lg font-semibold text-text-primary text-center mb-2">Delete Job?</h3>
+            <h3 className="text-lg font-semibold text-text-primary text-center mb-2">Cancel Job?</h3>
             <p className="text-sm text-text-secondary text-center mb-6">
-              This will permanently delete your job posting. This action cannot be undone.
+              This will cancel your job posting. It will appear in your Cancelled jobs.
             </p>
             <div className="flex gap-3">
               <button
@@ -295,11 +297,11 @@ export default function MyJobs() {
                 Cancel
               </button>
               <button
-                onClick={() => deleteJob(deleteConfirmJob)}
+                onClick={() => cancelJob(deleteConfirmJob)}
                 disabled={deleting}
                 className="flex-1 py-3 bg-red-500 text-white rounded-xl text-sm font-medium disabled:opacity-50"
               >
-                {deleting ? 'Deleting...' : 'Delete'}
+                {deleting ? 'Cancelling...' : 'Cancel Job'}
               </button>
             </div>
           </div>
