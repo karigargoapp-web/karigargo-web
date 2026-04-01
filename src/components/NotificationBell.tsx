@@ -3,6 +3,7 @@ import { IoNotifications } from 'react-icons/io5'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { getBrowserNotificationPermission, showBrowserNotification } from '../lib/browserNotifications'
+import toast from 'react-hot-toast'
 import type { Notification } from '../types'
 
 export default function NotificationBell({ showBadgeOnly = false }: { showBadgeOnly?: boolean }) {
@@ -30,6 +31,39 @@ export default function NotificationBell({ showBadgeOnly = false }: { showBadgeO
         (payload) => {
           const row = payload.new as Notification
           setNotifications(prev => [row, ...prev].slice(0, 10))
+          
+          // Show toast popup if user is on the page
+          if (document.visibilityState === 'visible') {
+            toast.custom((t) => (
+              <div
+                className={`${
+                  t.visible ? 'animate-enter' : 'animate-leave'
+                } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+              >
+                <div className="flex-1 w-0 p-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 pt-0.5">
+                      <IoNotifications className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <p className="text-sm font-medium text-gray-900">{row.title}</p>
+                      <p className="mt-1 text-sm text-gray-500">{row.body}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex border-l border-gray-200">
+                  <button
+                    onClick={() => toast.dismiss(t.id)}
+                    className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-primary hover:text-primary-dark focus:outline-none"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ), { duration: 5000, position: 'top-right' })
+          }
+          
+          // Show browser notification if page is hidden
           if (
             document.visibilityState === 'hidden' &&
             getBrowserNotificationPermission() === 'granted'

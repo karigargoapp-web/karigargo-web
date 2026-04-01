@@ -47,6 +47,37 @@ body {
   display: none;
 }
 
+/* ===== Toast Notification Animations ===== */
+@keyframes enter {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes leave {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-enter {
+  animation: enter 0.3s ease-out;
+}
+
+.animate-leave {
+  animation: leave 0.2s ease-in;
+}
+
 /* ===== Status pills ===== */
 .pill-pending { @apply bg-warning text-white text-xs font-medium px-3 py-1 rounded-full; }
 .pill-active { @apply bg-primary-light text-white text-xs font-medium px-3 py-1 rounded-full; }
