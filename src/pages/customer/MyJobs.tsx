@@ -224,18 +224,29 @@ export default function MyJobs() {
                                 <p className="text-xs text-text-secondary bg-gray-50 rounded-lg px-3 py-2 mb-2">{bid.message}</p>
                               )}
                               <div className="flex gap-2">
-                                <button
-                                  onClick={() => nav(`/customer/job/${job.id}`)}
-                                  className="flex-1 py-2 border border-border text-xs font-medium text-text-primary rounded-xl"
-                                >
-                                  View Profile
-                                </button>
-                                <button
-                                  onClick={() => nav(`/customer/job/${job.id}`)}
-                                  className="flex-1 py-2 bg-primary text-white text-xs font-medium rounded-xl"
-                                >
-                                  Accept Bid
-                                </button>
+                                {job.status === 'pending' ? (
+                                  <>
+                                    <button
+                                      onClick={() => nav(`/customer/job/${job.id}`)}
+                                      className="flex-1 py-2 border border-border text-xs font-medium text-text-primary rounded-xl"
+                                    >
+                                      View Profile
+                                    </button>
+                                    <button
+                                      onClick={() => nav(`/customer/job/${job.id}`)}
+                                      className="flex-1 py-2 bg-primary text-white text-xs font-medium rounded-xl"
+                                    >
+                                      Accept Bid
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={() => nav(`/customer/job/${job.id}`)}
+                                    className="w-full py-2 border border-border text-xs font-medium text-text-primary rounded-xl"
+                                  >
+                                    View Details
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ))}
