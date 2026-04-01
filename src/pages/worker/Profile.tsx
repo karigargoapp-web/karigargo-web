@@ -7,6 +7,11 @@ import { SERVICE_CATEGORIES, PAKISTAN_CITIES } from '../../types'
 import type { WorkerProfile as WP } from '../../types'
 import toast from 'react-hot-toast'
 
+const NOTIF_KEY = 'karigargo_notif_popup_enabled'
+function getNotifPref() {
+  try { const v = localStorage.getItem(NOTIF_KEY); return v === null ? true : v === 'true' } catch { return true }
+}
+
 export default function WorkerProfilePage() {
   const nav = useNavigate()
   const { user, signOut, refreshUser } = useAuth()
@@ -18,6 +23,14 @@ export default function WorkerProfilePage() {
   const [skills, setSkills] = useState<string[]>([])
   const [bio, setBio] = useState('')
   const [saving, setSaving] = useState(false)
+  const [notifEnabled, setNotifEnabled] = useState<boolean>(getNotifPref)
+
+  const toggleNotif = () => {
+    const next = !notifEnabled
+    setNotifEnabled(next)
+    try { localStorage.setItem(NOTIF_KEY, String(next)) } catch { }
+    toast.success(next ? 'Notifications turned on' : 'Notifications turned off')
+  }
 
   useEffect(() => {
     if (!user) return
@@ -165,9 +178,9 @@ export default function WorkerProfilePage() {
               </div>
             </div>
             {/* Toggle Switch */}
-            <div className="w-11 h-6 bg-primary rounded-full flex items-center justify-end pr-0.5">
+            <button onClick={toggleNotif} className={`w-11 h-6 rounded-full flex items-center transition-colors duration-200 px-0.5 ${notifEnabled ? 'bg-primary justify-end' : 'bg-gray-300 justify-start'}`}>
               <div className="w-5 h-5 bg-white rounded-full shadow" />
-            </div>
+            </button>
           </div>
 
           {/* Language */}

@@ -6,6 +6,11 @@ import { useAuth } from '../../hooks/useAuth'
 import { useI18n } from '../../lib/i18n'
 import toast from 'react-hot-toast'
 
+const NOTIF_KEY = 'karigargo_notif_popup_enabled'
+function getNotifPref() {
+  try { const v = localStorage.getItem(NOTIF_KEY); return v === null ? true : v === 'true' } catch { return true }
+}
+
 export default function CustomerProfile() {
   const nav = useNavigate()
   const { user, signOut, refreshUser } = useAuth()
@@ -15,6 +20,14 @@ export default function CustomerProfile() {
   const [phone, setPhone] = useState(user?.phone || '')
   const [city, setCity] = useState(user?.city || '')
   const [saving, setSaving] = useState(false)
+  const [notifEnabled, setNotifEnabled] = useState<boolean>(getNotifPref)
+
+  const toggleNotif = () => {
+    const next = !notifEnabled
+    setNotifEnabled(next)
+    try { localStorage.setItem(NOTIF_KEY, String(next)) } catch { }
+    toast.success(next ? 'Notifications turned on' : 'Notifications turned off')
+  }
 
   useEffect(() => {
     if (user) { setName(user.name); setPhone(user.phone || ''); setCity(user.city || '') }
@@ -137,9 +150,9 @@ export default function CustomerProfile() {
               </div>
             </div>
             {/* Toggle Switch */}
-            <div className="w-11 h-6 bg-primary rounded-full flex items-center justify-end pr-0.5">
+            <button onClick={toggleNotif} className={`w-11 h-6 rounded-full flex items-center transition-colors duration-200 px-0.5 ${notifEnabled ? 'bg-primary justify-end' : 'bg-gray-300 justify-start'}`}>
               <div className="w-5 h-5 bg-white rounded-full shadow" />
-            </div>
+            </button>
           </div>
 
           {/* Language */}
