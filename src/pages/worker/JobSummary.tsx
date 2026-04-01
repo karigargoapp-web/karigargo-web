@@ -20,9 +20,14 @@ export default function WorkerJobSummary() {
       supabase.from('reviews').select('*').eq('job_id', jobId).eq('direction', 'customer_to_worker').maybeSingle(),
       supabase.from('reviews').select('*').eq('job_id', jobId).eq('direction', 'worker_to_customer').maybeSingle(),
     ]).then(([jobRes, reviewRes, workerReviewRes]) => {
+      console.log('[JobSummary] jobRes:', jobRes)
+      console.log('[JobSummary] workerReviewRes:', workerReviewRes)
       if (jobRes.data) setJob(jobRes.data as Job)
       if (reviewRes.data) setReview(reviewRes.data as Review)
-      if (workerReviewRes.data) setWorkerReview(workerReviewRes.data as Review)
+      // Check if worker has reviewed customer - handle both null and empty object cases
+      const hasWorkerReview = workerReviewRes.data && Object.keys(workerReviewRes.data).length > 0
+      console.log('[JobSummary] hasWorkerReview:', hasWorkerReview)
+      setWorkerReview(hasWorkerReview ? (workerReviewRes.data as Review) : null)
       setLoading(false)
     })
   }, [jobId])
@@ -180,13 +185,19 @@ export default function WorkerJobSummary() {
           </div>
         )}
 
-        {!workerReview && (
+        {/* Rate Customer Button - Always show unless review exists */}
+        {!workerReview && !loading && (
           <button
             onClick={() => nav(`/worker/review-customer/${jobId}`)}
-            className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3.5 rounded-2xl text-sm font-medium shadow-sm"
+            className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3.5 rounded-2xl text-sm font-medium shadow-sm animate-pulse"
           >
             <IoStar size={16} /> Rate Customer
           </button>
+        )}
+        {workerReview && (
+          <div className="card p-4 bg-green-50 border-green-200">
+            <p className="text-sm text-green-700 text-center">✅ You have rated this customer</p>
+          </div>
         )}
 
         <button
