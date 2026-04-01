@@ -24,14 +24,28 @@ export default function CustomerActiveJob() {
     if (!jobId) return
     const fetchJob = async () => {
       const { data } = await supabase.from('jobs').select('*').eq('id', jobId).single()
-      if (data) setJob(data as Job)
+      if (data) {
+        console.log('[ActiveJob] Initial job loaded:', data.status)
+        setJob(data as Job)
+      }
       setLoading(false)
     }
     fetchJob()
     const channel = supabase
       .channel(`job-${jobId}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'jobs', filter: `id=eq.${jobId}` },
-        (payload) => setJob(payload.new as Job))
+        (payload) => {
+          console.log('[ActiveJob] Realtime update received:', payload.new)
+          const newJob = payload.new as Job
+          console.log('[ActiveJob] Status changed to:', newJob.status)
+          setJob(newJob)
+          // Show toast notification for status changes
+          if (newJob.status === 'inspectionDone') {
+            toast('✅ Worker completed inspection!', { duration: 4000 })
+          } else if (newJob.status === 'workCostProposed') {
+            toast('💰 Worker proposed work cost - please review!', { duration: 5000 })
+          }
+        })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [jobId])
