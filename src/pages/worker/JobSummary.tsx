@@ -10,6 +10,7 @@ export default function WorkerJobSummary() {
   const { jobId } = useParams()
   const [job, setJob] = useState<Job | null>(null)
   const [review, setReview] = useState<Review | null>(null)
+  const [workerReview, setWorkerReview] = useState<Review | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -17,9 +18,11 @@ export default function WorkerJobSummary() {
     Promise.all([
       supabase.from('jobs').select('*').eq('id', jobId).maybeSingle(),
       supabase.from('reviews').select('*').eq('job_id', jobId).eq('direction', 'customer_to_worker').maybeSingle(),
-    ]).then(([jobRes, reviewRes]) => {
+      supabase.from('reviews').select('*').eq('job_id', jobId).eq('direction', 'worker_to_customer').maybeSingle(),
+    ]).then(([jobRes, reviewRes, workerReviewRes]) => {
       if (jobRes.data) setJob(jobRes.data as Job)
       if (reviewRes.data) setReview(reviewRes.data as Review)
+      if (workerReviewRes.data) setWorkerReview(workerReviewRes.data as Review)
       setLoading(false)
     })
   }, [jobId])
@@ -175,6 +178,15 @@ export default function WorkerJobSummary() {
               <p className="text-xs text-text-secondary italic">"{review.comment}"</p>
             )}
           </div>
+        )}
+
+        {!workerReview && (
+          <button
+            onClick={() => nav(`/worker/review-customer/${jobId}`)}
+            className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3.5 rounded-2xl text-sm font-medium shadow-sm"
+          >
+            <IoStar size={16} /> Rate Customer
+          </button>
         )}
 
         <button
