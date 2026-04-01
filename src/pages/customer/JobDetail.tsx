@@ -142,15 +142,12 @@ export default function JobDetail() {
           {(() => {
             const urls = parseMediaUrls(job.image_url)
             if (urls.length === 0) return null
+            const imageUrl = urls.find(u => !isVideoUrl(u))
+            const videoUrl = urls.find(u => isVideoUrl(u))
             return (
-              <div className={`mt-3 ${urls.length > 1 ? 'flex gap-2 overflow-x-auto pb-2' : ''}`}>
-                {urls.map((url, i) =>
-                  isVideoUrl(url) ? (
-                    <video key={i} src={url} controls className={`${urls.length > 1 ? 'w-48 h-36 shrink-0' : 'w-full h-36'} object-cover rounded-xl`} preload="metadata" />
-                  ) : (
-                    <img key={i} src={url} alt="" className={`${urls.length > 1 ? 'w-48 h-36 shrink-0' : 'w-full h-36'} object-cover rounded-xl`} />
-                  )
-                )}
+              <div className="mt-3 space-y-2">
+                {imageUrl && <img src={imageUrl} alt="" className="w-full h-48 object-cover rounded-xl" />}
+                {videoUrl && <video src={videoUrl} controls className="w-full h-48 rounded-xl" preload="metadata" />}
               </div>
             )
           })()}

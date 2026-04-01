@@ -136,13 +136,15 @@ export default function PostJob() {
   }
 
   const addMedia = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
-    const files = Array.from(e.target.files || [])
-    const newItems: MediaItem[] = files.map(f => ({
-      file: f,
-      preview: URL.createObjectURL(f),
-      type,
-    }))
-    setMediaItems(prev => [...prev, ...newItems])
+    const file = e.target.files?.[0]
+    if (!file) return
+    // Replace any existing item of the same type (1 image + 1 video max)
+    setMediaItems(prev => {
+      const existing = prev.find(m => m.type === type)
+      if (existing) URL.revokeObjectURL(existing.preview)
+      const filtered = prev.filter(m => m.type !== type)
+      return [...filtered, { file, preview: URL.createObjectURL(file), type }]
+    })
     e.target.value = ''
   }
 
@@ -352,23 +354,19 @@ export default function PostJob() {
             Attachments{' '}
             <span className="text-red-500">*</span> <span className="text-text-muted font-normal">(Please show the problem)</span>
           </label>
+          {/* Preview row */}
           {mediaItems.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mb-3">
+            <div className="flex gap-3 mb-3">
               {mediaItems.map((item, i) => (
-                <div
-                  key={i}
-                  className="relative rounded-xl overflow-hidden border border-border aspect-square"
-                >
+                <div key={i} className="relative flex-1 rounded-xl overflow-hidden border border-border" style={{ aspectRatio: '4/3' }}>
                   {item.type === 'image' ? (
                     <img src={item.preview} className="w-full h-full object-cover" alt="" />
                   ) : (
-                    <video src={item.preview} className="w-full h-full object-cover" />
+                    <video src={item.preview} className="w-full h-full object-cover" preload="metadata" />
                   )}
-                  {item.type === 'video' && (
-                    <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-                      <IoVideocam size={10} /> Video
-                    </div>
-                  )}
+                  <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded-md">
+                    {item.type === 'image' ? '📷 Photo' : '🎥 Video'}
+                  </div>
                   <button
                     onClick={() => removeMedia(i)}
                     className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center"
@@ -379,33 +377,26 @@ export default function PostJob() {
               ))}
             </div>
           )}
+          {/* Upload buttons — hide each once added */}
           <div className="flex gap-3">
-            <label className="flex-1 cursor-pointer">
-              <div className="h-20 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-primary/40 hover:bg-primary/5 transition">
-                <IoCamera size={22} className="text-text-muted" />
-                <p className="text-[11px] text-text-muted font-medium">Add Photos</p>
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={e => addMedia(e, 'image')}
-              />
-            </label>
-            <label className="flex-1 cursor-pointer">
-              <div className="h-20 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-primary/40 hover:bg-primary/5 transition">
-                <IoVideocam size={22} className="text-text-muted" />
-                <p className="text-[11px] text-text-muted font-medium">Add Videos</p>
-              </div>
-              <input
-                type="file"
-                accept="video/*"
-                multiple
-                className="hidden"
-                onChange={e => addMedia(e, 'video')}
-              />
-            </label>
+            {!mediaItems.find(m => m.type === 'image') && (
+              <label className="flex-1 cursor-pointer">
+                <div className="h-20 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-primary/40 hover:bg-primary/5 transition">
+                  <IoCamera size={22} className="text-text-muted" />
+                  <p className="text-[11px] text-text-muted font-medium">Add Photo</p>
+                </div>
+                <input type="file" accept="image/*" className="hidden" onChange={e => addMedia(e, 'image')} />
+              </label>
+            )}
+            {!mediaItems.find(m => m.type === 'video') && (
+              <label className="flex-1 cursor-pointer">
+                <div className="h-20 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-primary/40 hover:bg-primary/5 transition">
+                  <IoVideocam size={22} className="text-text-muted" />
+                  <p className="text-[11px] text-text-muted font-medium">Add Video</p>
+                </div>
+                <input type="file" accept="video/*" className="hidden" onChange={e => addMedia(e, 'video')} />
+              </label>
+            )}
           </div>
         </div>
 
