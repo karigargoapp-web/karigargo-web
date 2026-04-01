@@ -22,9 +22,8 @@ import CustomerMessages from './pages/customer/Messages'
 import ChangePassword from './pages/customer/ChangePassword'
 import CustomerNotifications from './pages/customer/Notifications'
 import CustomerPersonalInfo from './pages/customer/PersonalInfo'
+import CustomerJobSummary from './pages/customer/JobSummary'
 import TrackingScreen from './pages/customer/TrackingScreen'
-
-// Shared
 import ChatPage from './pages/ChatPage'
 import HelpSupport from './pages/shared/HelpSupport'
 import LanguageSelection from './pages/shared/LanguageSelection'
@@ -145,6 +144,7 @@ export function AppRouter() {
           <Route path="/customer/receipt/:jobId" element={<CustomerReceipt />} />
           <Route path="/customer/review/:jobId" element={<ReviewWorker />} />
           <Route path="/customer/worker/:workerId" element={<ViewWorkerProfile />} />
+          <Route path="/customer/job-summary/:jobId" element={<CustomerJobSummary />} />
           <Route path="/customer/tracking/:jobId" element={<TrackingScreen />} />
           <Route path="/customer/profile" element={<CustomerProfile />} />
         </Route>

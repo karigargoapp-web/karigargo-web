@@ -239,6 +239,13 @@ export default function MyJobs() {
                                       Accept Bid
                                     </button>
                                   </>
+                                ) : job.status === 'completed' ? (
+                                  <button
+                                    onClick={() => nav(`/customer/job-summary/${job.id}`)}
+                                    className="w-full py-2 bg-primary text-white text-xs font-medium rounded-xl"
+                                  >
+                                    View Summary
+                                  </button>
                                 ) : (
                                   <button
                                     onClick={() => nav(`/customer/job/${job.id}`)}
