@@ -142,10 +142,9 @@ export default function WorkerSignup() {
           validatePassword(password) ||
           validatePakistanPhone(phone, { optional: false })
         if (err) return toast.error(err)
-        if (photo) {
-          const pe = validateImageFile(photo, { required: false })
-          if (pe) return toast.error(pe)
-        }
+        if (!photo) return toast.error('Please upload a profile photo')
+        const pe = validateImageFile(photo, { required: true })
+        if (pe) return toast.error(pe)
       }
     }
     if (step === 1 && (skills.length === 0 || !city)) return toast.error('Select at least one skill and a city')
@@ -181,10 +180,9 @@ export default function WorkerSignup() {
     if (!isOAuthCompletion) {
       const authErr = validatePersonName(name) || validateEmail(email) || validatePassword(password)
       if (authErr) return toast.error(authErr)
-      if (photo) {
-        const pe = validateImageFile(photo, { required: false })
-        if (pe) return toast.error(pe)
-      }
+      if (!photo) return toast.error('Please upload a profile photo')
+      const pe = validateImageFile(photo, { required: true })
+      if (pe) return toast.error(pe)
     }
     for (const cert of certificates) {
       const ce = validateCertificateFile(cert)
@@ -399,9 +397,10 @@ export default function WorkerSignup() {
               <>
                 <div className="flex justify-center mb-2">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="w-24 h-24 rounded-full bg-surface border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
-                      {photoPreview ? <img src={photoPreview} className="w-full h-full object-cover" /> : <IoCamera size={28} className="text-text-muted" />}
+                    <div className={`w-24 h-24 rounded-full border-2 border-dashed flex items-center justify-center overflow-hidden ${photoPreview ? 'border-primary bg-primary/5' : 'bg-surface border-red-400'}`}>
+                      {photoPreview ? <img src={photoPreview} className="w-full h-full object-cover" /> : <IoCamera size={28} className="text-red-400" />}
                     </div>
+                    <p className="text-xs text-red-500 font-medium">Profile photo required *</p>
                     <div className="flex gap-2">
                       <button
                         type="button"
