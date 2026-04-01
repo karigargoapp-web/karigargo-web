@@ -246,7 +246,7 @@ export default function JobDetail() {
                   </div>
                 )}
 
-                {!accepted && bid.status === 'pending' && (
+                {!accepted && bid.status === 'pending' && job.status === 'pending' && (
                   <div className="flex gap-2 mt-3">
                     <button
                       onClick={() => nav(`/customer/worker/${bid.worker_id}`)}
@@ -260,6 +260,16 @@ export default function JobDetail() {
                       className="flex-1 py-2.5 bg-primary text-white text-sm font-medium rounded-xl active:scale-[0.98] transition disabled:opacity-50"
                     >
                       {accepting === bid.id ? 'Accepting...' : 'Accept Bid'}
+                    </button>
+                  </div>
+                )}
+                {bid.status === 'pending' && job.status !== 'pending' && (
+                  <div className="mt-3">
+                    <button
+                      onClick={() => nav(`/customer/worker/${bid.worker_id}`)}
+                      className="w-full py-2.5 border border-border text-sm text-text-secondary font-medium rounded-xl active:scale-[0.98] transition"
+                    >
+                      View Profile
                     </button>
                   </div>
                 )}
