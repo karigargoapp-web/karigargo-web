@@ -171,7 +171,7 @@ export default function PostJob() {
       validateJobDescription(description) ||
       validateJobBudget(budget) ||
       validateVoiceNote(voiceBlob, { required: true }) ||
-      validateMediaItems(mediaItems, { required: true }) ||
+      (!mediaItems.find(m => m.type === 'image') ? 'Please add a photo showing the problem' : null) ||
       validateJobDate(date)
     if (err) return toast.error(err)
     if (!category) return toast.error('Please select a category')
@@ -383,7 +383,7 @@ export default function PostJob() {
               <label className="flex-1 cursor-pointer">
                 <div className="h-20 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-primary/40 hover:bg-primary/5 transition">
                   <IoCamera size={22} className="text-text-muted" />
-                  <p className="text-[11px] text-text-muted font-medium">Add Photo</p>
+                  <p className="text-[11px] text-text-muted font-medium">Add Photo <span className="text-red-500">*</span></p>
                 </div>
                 <input type="file" accept="image/*" className="hidden" onChange={e => addMedia(e, 'image')} />
               </label>
@@ -392,7 +392,7 @@ export default function PostJob() {
               <label className="flex-1 cursor-pointer">
                 <div className="h-20 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 hover:border-primary/40 hover:bg-primary/5 transition">
                   <IoVideocam size={22} className="text-text-muted" />
-                  <p className="text-[11px] text-text-muted font-medium">Add Video</p>
+                  <p className="text-[11px] text-text-muted font-medium">Add Video <span className="text-text-muted">(optional)</span></p>
                 </div>
                 <input type="file" accept="video/*" className="hidden" onChange={e => addMedia(e, 'video')} />
               </label>
