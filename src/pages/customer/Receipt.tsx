@@ -1,20 +1,25 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { IoArrowBack, IoShareSocial, IoHome, IoCash, IoCard, IoDownload } from 'react-icons/io5'
+import { IoArrowBack, IoShareSocial, IoHome, IoCash, IoCard, IoDownload, IoStar } from 'react-icons/io5'
 import { jsPDF } from 'jspdf'
 import { supabase } from '../../lib/supabase'
-import type { Job } from '../../types'
+import type { Job, Review } from '../../types'
 
 export default function CustomerReceipt() {
   const nav = useNavigate()
   const { jobId } = useParams()
   const [job, setJob] = useState<Job | null>(null)
+  const [customerReview, setCustomerReview] = useState<Review | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'online'>('cash')
 
   useEffect(() => {
     if (!jobId) return
-    supabase.from('jobs').select('*').eq('id', jobId).single().then(({ data }) => {
-      if (data) setJob(data as Job)
+    Promise.all([
+      supabase.from('jobs').select('*').eq('id', jobId).single(),
+      supabase.from('reviews').select('*').eq('job_id', jobId).eq('direction', 'customer_to_worker').maybeSingle(),
+    ]).then(([jobRes, reviewRes]) => {
+      if (jobRes.data) setJob(jobRes.data as Job)
+      if (reviewRes.data) setCustomerReview(reviewRes.data as Review)
     })
   }, [jobId])
 
@@ -214,13 +219,20 @@ export default function CustomerReceipt() {
         </div>
 
         {/* Actions */}
+        {!customerReview && (
+          <button 
+            onClick={() => nav(`/customer/review/${jobId}`)} 
+            className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3.5 rounded-2xl text-sm font-medium shadow-sm"
+          >
+            <IoStar size={16} /> Rate Worker
+          </button>
+        )}
         <button onClick={handleDownloadPdf} className="w-full flex items-center justify-center gap-2 border border-border bg-white text-text-primary py-3.5 rounded-2xl text-sm font-medium shadow-sm">
           <IoDownload size={16} /> Download Receipt
         </button>
         <button onClick={handleShare} className="w-full flex items-center justify-center gap-2 border border-border bg-white text-text-primary py-3.5 rounded-2xl text-sm font-medium shadow-sm">
           <IoShareSocial size={16} /> Share Receipt
         </button>
-        <button onClick={() => nav(`/customer/review/${jobId}`)} className="btn-primary">Rate Worker</button>
         <button onClick={() => nav('/customer/home')} className="flex items-center justify-center gap-2 w-full border border-border bg-white text-text-secondary py-3.5 rounded-2xl text-sm font-medium shadow-sm">
           <IoHome size={16} /> Back to Home
         </button>
