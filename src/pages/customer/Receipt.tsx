@@ -101,16 +101,7 @@ export default function CustomerReceipt() {
     drawDivider()
     drawRow('Total Amount', `PKR ${grandTotal.toLocaleString()}`, true)
     drawRow('Amount to Worker', `PKR ${netToWorker.toLocaleString()}`)
-    y += 5
-
-    // Case badge
-    doc.setFillColor(isCaseA ? 220 : 254, isCaseA ? 252 : 249, isCaseA ? 231 : 195)
-    doc.roundedRect(margin, y, contentW, 10, 2, 2, 'F')
-    doc.setTextColor(isCaseA ? 133 : 161, isCaseA ? 100 : 98, isCaseA ? 0 : 0)
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'bold')
-    doc.text(isCaseA ? 'Case A — Full Payment' : 'Case B — Inspection Only', pageW / 2, y + 6.5, { align: 'center' })
-    y += 18
+    y += 10
 
     // Footer
     doc.setDrawColor(200, 200, 200)
@@ -187,12 +178,6 @@ export default function CustomerReceipt() {
               <span className="text-text-secondary">Amount to Worker</span>
               <span className="text-text-primary">PKR {netToWorker.toLocaleString()}</span>
             </div>
-          </div>
-
-          <div className="mt-3 flex justify-center">
-            <span className={`inline-block text-xs font-medium px-3 py-1 rounded-full ${isCaseA ? 'bg-primary/10 text-primary' : 'bg-yellow-100 text-yellow-700'}`}>
-              {isCaseA ? 'Case A — Full Payment' : 'Case B — Inspection Only'}
-            </span>
           </div>
         </div>
 

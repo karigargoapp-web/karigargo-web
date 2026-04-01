@@ -215,7 +215,7 @@ export default function CustomerActiveJob() {
           <div className="bg-white w-full max-w-[430px] rounded-t-3xl p-6 animate-slide-up">
             <h3 className="text-lg font-semibold text-text-primary mb-1">Confirm Completion</h3>
             <p className="text-sm text-text-secondary mb-4">
-              {isCaseA ? '✅ Case A — Full payment (inspection + work cost)' : '⚠️ Case B — Inspection charges only'}
+              Review the payment breakdown below
             </p>
             <div className="space-y-2 mb-5">
               <div className="flex justify-between text-sm"><span className="text-text-secondary">Inspection Fee</span><span className="font-medium">PKR {inspectionFee}</span></div>
