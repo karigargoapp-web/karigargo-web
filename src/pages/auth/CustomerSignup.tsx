@@ -113,6 +113,7 @@ export default function CustomerSignup() {
     if (fieldErr) return toast.error(fieldErr)
     const pe = validateImageFile(photo!, { required: false })
     if (pe) return toast.error(pe)
+
     if (submitLockRef.current) return
     submitLockRef.current = true
     setLoading(true)
